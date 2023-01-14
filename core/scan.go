@@ -15,9 +15,9 @@ const (
 
 // Scan represents the scan for on a repository.
 type Scan struct {
-	ID         int64      `json:"id"`
-	Repository Repository `json:"repository"`
-	Status     string     `json:"status"` // refer to status job.
+	ID         int64  `json:"id"`
+	Repository int64  `json:"repository"`
+	Status     string `json:"status"` // refer to status job.
 	// unix timestamp
 	EnqueuedAt int64 `json:"enqueuedAt"`
 	StartedAt  int64 `json:"startedAt"`

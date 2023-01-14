@@ -6,7 +6,6 @@ import "context"
 type Repository struct {
 	ID      int64  `json:"id"`
 	User    string `json:"user"`   // submit by user
-	Name    string `json:"name"`   // repository name
 	Commit  string `json:"commit"` // the latest commit
 	HttpURL string `json:"git_http_url"`
 	Created int64  `json:"created"`
@@ -22,6 +21,10 @@ type RepoParam struct {
 
 // RepositoryStore defines operations for working with repositories.
 type RepositoryStore interface {
+
+	// Find a repository by a id.
+	Find(ctx context.Context, id int64) (*Repository, error)
+
 	// Create persists a new repository to the datastore.
 	Create(ctx context.Context, repo *Repository) error
 
@@ -29,7 +32,7 @@ type RepositoryStore interface {
 	List(context.Context) ([]*Repository, error)
 
 	// ListRange returns a range of repo from the datastore.
-	ListRange(context.Context, RepoParam) ([]*Repository, error)
+	// ListRange(context.Context, RepoParam) ([]*Repository, error)
 
 	// Delete deletes a repository from the datastore.
 	Delete(context.Context, *Repository) error
