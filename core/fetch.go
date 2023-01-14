@@ -2,9 +2,9 @@ package core
 
 import "context"
 
-// Fetchers fetches the public git repository
-type Fetcher interface {
-	// Fetch downloads the public repository,
-	// The returns a downloaded directory, cleanup function and the error.
-	Fetch(ctx context.Context, target string) (string, func(), error)
+// GitFetcher fetches the public git repository
+type GitFetcher interface {
+	// Clone downloads the remote repository,
+	// it returns the path to temp directory, the cleanup function
+	Clone(ctx context.Context, remoteURL string) (string, func(), error)
 }
