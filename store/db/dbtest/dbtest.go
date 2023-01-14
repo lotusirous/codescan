@@ -3,6 +3,7 @@ package dbtest
 import (
 	"context"
 	"database/sql"
+	_ "embed"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -14,6 +15,7 @@ func Connect() (*sql.DB, error) {
 	var datasource string
 	datasource = os.Getenv("DATABASE_DATASOURCE")
 	return db.Connect(datasource, 0)
+
 }
 
 var noContext = context.TODO()
@@ -24,9 +26,8 @@ func Reset(d *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	tx.Exec("DELETE FROM repositories")
+	tx.Exec("DELETE FROM repos")
 	tx.Exec("DELETE FROM scans")
-	tx.Exec("DELETE FROM scan_results")
 	return tx.Commit()
 }
 
