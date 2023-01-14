@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Connect to a database and verify with a ping.

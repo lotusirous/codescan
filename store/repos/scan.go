@@ -11,7 +11,6 @@ func toParam(repo *core.Repository) squirrel.Eq {
 		"commit":   repo.Commit,
 		"scm":      repo.SCM,
 		"http_url": repo.HttpURL,
-		"ssh_url":  repo.SSHURL,
 		"name":     repo.Name,
 		"created":  repo.Created,
 		"updated":  repo.Updated,

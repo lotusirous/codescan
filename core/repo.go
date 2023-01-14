@@ -9,9 +9,7 @@ type Repository struct {
 	Commit  string `json:"commit"` // the latest commit
 	SCM     string `json:"scm"`
 	HttpURL string `json:"git_http_url"`
-	SSHURL  string `json:"git_ssh_url"`
 	Name    string `json:"name"`
-	Link    string `json:"link"`
 	Created int64  `json:"created"`
 	Updated int64  `json:"updated"`
 }
