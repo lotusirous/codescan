@@ -18,10 +18,9 @@ type Scan struct {
 	ID         int64  `json:"id"`
 	Repository int64  `json:"repository"`
 	Status     string `json:"status"` // refer to status job.
-	// unix timestamp
-	EnqueuedAt int64 `json:"enqueuedAt"`
-	StartedAt  int64 `json:"startedAt"`
-	FinishedAt int64 `json:"finishedAt"`
+	EnqueuedAt int64  `json:"enqueuedAt"`
+	StartedAt  int64  `json:"startedAt"`
+	FinishedAt int64  `json:"finishedAt"`
 }
 
 // IsDone returns true if the scan has a completed state.
@@ -43,6 +42,9 @@ func (s *Scan) IsFailed() bool {
 type ScanStore interface {
 	// Update stores the status in the datastore.
 	Update(ctx context.Context, s *Scan) error
+
+	// Find returns a scan from datastore..
+	Find(ctx context.Context, id int64) (*Scan, error)
 
 	// Creates persists a scan in the datastore.
 	Create(ctx context.Context, s *Scan) error

@@ -10,15 +10,31 @@ import (
 )
 
 func New(db *sql.DB) core.ScanStore {
-	return &repoStore{db: db}
+	return &scanStore{db: db}
 }
 
-type repoStore struct {
+type scanStore struct {
 	db *sql.DB
 }
 
+// Find returns a scan from datastore.
+func (s *scanStore) Find(ctx context.Context, id int64) (*core.Scan, error) {
+	out := new(core.Scan)
+	query := `
+SELECT scan_id, repo_id, status, enqueued_at, started_at, finished_at
+FROM scans WHERE scan_id = ?`
+	err := s.db.QueryRowContext(ctx, query, id).Scan(&out.ID,
+		&out.Repository,
+		&out.Status,
+		&out.EnqueuedAt,
+		&out.StartedAt,
+		&out.FinishedAt,
+	)
+	return out, err
+}
+
 // Count counts the scan in the datastore.
-func (s *repoStore) Count(ctx context.Context) (int64, error) {
+func (s *scanStore) Count(ctx context.Context) (int64, error) {
 	queryCount := `SELECT COUNT(*) FROM scans`
 	var count int64
 	err := s.db.QueryRowContext(ctx, queryCount).Scan(&count)
@@ -29,7 +45,7 @@ func (s *repoStore) Count(ctx context.Context) (int64, error) {
 }
 
 // Delete removes the scan from datastore.
-func (s *repoStore) Delete(ctx context.Context, scan *core.Scan) error {
+func (s *scanStore) Delete(ctx context.Context, scan *core.Scan) error {
 	queryDelete := `DELETE FROM repos WHERE repo_id = ?`
 	r, err := s.db.ExecContext(ctx, queryDelete, scan.ID)
 	if err != nil {
@@ -46,7 +62,7 @@ func (s *repoStore) Delete(ctx context.Context, scan *core.Scan) error {
 }
 
 // UpdateStatus implements core.ScanStore
-func (s *repoStore) Update(ctx context.Context, scan *core.Scan) error {
+func (s *scanStore) Update(ctx context.Context, scan *core.Scan) error {
 	b := squirrel.Update("scans").SetMap(squirrel.Eq{"scan_id": 1})
 	query, args, err := b.PlaceholderFormat(squirrel.Question).ToSql()
 	if err != nil {
@@ -70,8 +86,8 @@ func (s *repoStore) Update(ctx context.Context, scan *core.Scan) error {
 }
 
 // Create persists a scan to datastore.
-func (s *repoStore) Create(ctx context.Context, scan *core.Scan) error {
-	query, args, err := squirrel.Insert("scan").SetMap(squirrel.Eq{
+func (s *scanStore) Create(ctx context.Context, scan *core.Scan) error {
+	query, args, err := squirrel.Insert("scans").SetMap(squirrel.Eq{
 		"repo_id":     scan.Repository,
 		"status":      scan.Status,
 		"enqueued_at": scan.EnqueuedAt,
@@ -97,7 +113,7 @@ func (s *repoStore) Create(ctx context.Context, scan *core.Scan) error {
 // List returns a all stored scans.
 // It returns fs.ErrNotExist if the scan does not exist.
 // The caller owns the returned value.
-func (s *repoStore) List(ctx context.Context) ([]*core.Scan, error) {
+func (s *scanStore) List(ctx context.Context) ([]*core.Scan, error) {
 	query := `SELECT scan_id, status, enqueued_at, started_at, finished_at FROM scans`
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
