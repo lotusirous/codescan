@@ -4,8 +4,8 @@ import "context"
 
 // Repository represents a source code repository.
 type Repository struct {
-	ID      int64  `json:"id"`
-	User    string `json:"user"`   // submit by user
+	ID int64 `json:"id"`
+	// User    string `json:"user"`   // submit by user
 	Commit  string `json:"commit"` // the latest commit
 	HttpURL string `json:"git_http_url"`
 	Created int64  `json:"created"`
