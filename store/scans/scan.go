@@ -2,25 +2,26 @@ package scans
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lotusirous/codescan/core"
-	"github.com/lotusirous/codescan/store/db"
 )
 
-func New(db *db.DB) core.ScanStore {
+func New(db *sql.DB) core.ScanStore {
 	return &repoStore{db: db}
 }
 
 type repoStore struct {
-	db *db.DB
+	db *sql.DB
 }
 
 // Count counts the scan in the datastore.
 func (s *repoStore) Count(ctx context.Context) (int64, error) {
 	queryCount := `SELECT COUNT(*) FROM scans`
 	var count int64
-	err := s.db.QueryRow(ctx, queryCount).Scan(&count)
+	err := s.db.QueryRowContext(ctx, queryCount).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -30,8 +31,18 @@ func (s *repoStore) Count(ctx context.Context) (int64, error) {
 // Delete removes the scan from datastore.
 func (s *repoStore) Delete(ctx context.Context, scan *core.Scan) error {
 	queryDelete := `DELETE FROM repos WHERE repo_id = ?`
-	err := s.db.Exec(ctx, queryDelete, scan.ID)
-	return err
+	r, err := s.db.ExecContext(ctx, queryDelete, scan.ID)
+	if err != nil {
+		return err
+	}
+	rows, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return fmt.Errorf("no row affected for repo_id: %d", scan.ID)
+	}
+	return nil
 }
 
 // UpdateStatus implements core.ScanStore
@@ -41,23 +52,46 @@ func (s *repoStore) Update(ctx context.Context, scan *core.Scan) error {
 	if err != nil {
 		return err
 	}
-	return s.db.ExecTX(ctx, query, args...)
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	r, err := tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	rows, err := r.RowsAffected()
+	if rows != 1 {
+		return err
+	}
+	return tx.Commit()
+
 }
 
 // Create persists a scan to datastore.
 func (s *repoStore) Create(ctx context.Context, scan *core.Scan) error {
 	query, args, err := squirrel.Insert("scan").SetMap(squirrel.Eq{
-		"repo_id":     scan.Repository.ID,
+		"repo_id":     scan.Repository,
 		"status":      scan.Status,
-		"enqueued_at": 0,
-		"started_at":  0,
-		"finished_at": 0,
+		"enqueued_at": scan.EnqueuedAt,
+		"started_at":  scan.StartedAt,
+		"finished_at": scan.FinishedAt,
 	}).ToSql()
 	if err != nil {
 		return err
 	}
-	return s.db.Exec(ctx, query, args...)
+	r, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	id, err := r.LastInsertId()
+	if err != nil {
+		return err
+	}
 
+	scan.ID = id
+	return nil
 }
 
 // List returns a all stored scans.
@@ -65,7 +99,7 @@ func (s *repoStore) Create(ctx context.Context, scan *core.Scan) error {
 // The caller owns the returned value.
 func (s *repoStore) List(ctx context.Context) ([]*core.Scan, error) {
 	query := `SELECT scan_id, status, enqueued_at, started_at, finished_at FROM scans`
-	rows, err := s.db.Query(ctx, query)
+	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}

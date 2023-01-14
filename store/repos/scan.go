@@ -7,11 +7,8 @@ import (
 
 func toParam(repo *core.Repository) squirrel.Eq {
 	return squirrel.Eq{
-		"user":     repo.User,
 		"commit":   repo.Commit,
-		"scm":      repo.SCM,
 		"http_url": repo.HttpURL,
-		"name":     repo.Name,
 		"created":  repo.Created,
 		"updated":  repo.Updated,
 	}

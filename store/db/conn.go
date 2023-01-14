@@ -8,7 +8,7 @@ import (
 )
 
 // Connect to a database and verify with a ping.
-func Connect(datasource string, maxOpenConnections int) (*DB, error) {
+func Connect(datasource string, maxOpenConnections int) (*sql.DB, error) {
 	db, err := sql.Open("mysql", datasource)
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func Connect(datasource string, maxOpenConnections int) (*DB, error) {
 	}
 	db.SetMaxOpenConns(maxOpenConnections)
 
-	return &DB{conn: db}, nil
+	return db, nil
 
 }
 

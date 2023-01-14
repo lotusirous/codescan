@@ -2,6 +2,7 @@ package dbtest
 
 import (
 	"context"
+	"database/sql"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -9,7 +10,7 @@ import (
 )
 
 // Connect opens a new test database connection.
-func Connect() (*db.DB, error) {
+func Connect() (*sql.DB, error) {
 	var datasource string
 	datasource = os.Getenv("DATABASE_DATASOURCE")
 	return db.Connect(datasource, 0)
@@ -18,8 +19,8 @@ func Connect() (*db.DB, error) {
 var noContext = context.TODO()
 
 // Reset resets the database state.
-func Reset(d *db.DB) error {
-	tx, err := d.Tx()
+func Reset(d *sql.DB) error {
+	tx, err := d.Begin()
 	if err != nil {
 		return err
 	}
@@ -30,6 +31,6 @@ func Reset(d *db.DB) error {
 }
 
 // Disconnect closes the database connection.
-func Disconnect(d *db.DB) error {
+func Disconnect(d *sql.DB) error {
 	return d.Close()
 }

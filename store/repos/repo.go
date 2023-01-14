@@ -2,25 +2,47 @@ package repos
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lotusirous/codescan/core"
-	"github.com/lotusirous/codescan/store/db"
 )
 
-func New(db *db.DB) core.RepositoryStore {
+func New(db *sql.DB) core.RepositoryStore {
 	return &repoStore{db: db}
 }
 
 type repoStore struct {
-	db *db.DB
+	db *sql.DB
+}
+
+// Find implements core.RepositoryStore
+func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error) {
+	query, args, err := squirrel.Select("repo_id, commit, http_url, created, updated").From("repos").ToSql()
+	if err != nil {
+		return nil, err
+	}
+	out := new(core.Repository)
+	err = s.db.QueryRowContext(ctx, query, args...).Scan(
+		&out.ID,
+		&out.Commit,
+		&out.HttpURL,
+		&out.Created,
+		&out.Updated,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+
 }
 
 // Count implements core.RepositoryStore
 func (s *repoStore) Count(ctx context.Context) (int64, error) {
 	query := `SELECT COUNT(*) FROM repos`
 	var count int64
-	err := s.db.QueryRow(ctx, query).Scan(&count)
+	err := s.db.QueryRowContext(ctx, query).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -30,33 +52,50 @@ func (s *repoStore) Count(ctx context.Context) (int64, error) {
 // Create implements core.RepositoryStore
 func (s *repoStore) Create(ctx context.Context, repo *core.Repository) error {
 	query, args, err := squirrel.Insert("repos").SetMap(squirrel.Eq{
-		"user":     repo.User,
 		"commit":   repo.Commit,
-		"scm":      repo.SCM,
 		"http_url": repo.HttpURL,
-		"name":     repo.Name,
 		"created":  repo.Created,
 		"updated":  repo.Updated,
 	}).PlaceholderFormat(squirrel.Question).ToSql()
 	if err != nil {
 		return err
 	}
-	return s.db.Exec(ctx, query, args...)
+	r, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	lastID, err := r.LastInsertId()
+	if err != nil {
+		return err
+	}
+	repo.ID = lastID
+	return nil
+
 }
 
 // Delete implements core.RepositoryStore
 func (s *repoStore) Delete(ctx context.Context, repo *core.Repository) error {
 	query := `DELETE FROM repos WHERE repo_id = ?`
-	return s.db.Exec(ctx, query, repo.ID)
+
+	r, err := s.db.ExecContext(ctx, query, repo.ID)
+	if err != nil {
+		return err
+	}
+	rows, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return fmt.Errorf("no rows affected for repo id: %d", repo.ID)
+	}
+	return nil
 }
 
 const stmtFind = `
 SELECT repo_id
 	,user
 	,commit
-	,scm
 	,http_url
-	,name
 	,created
 	,updated
 FROM repos
@@ -64,15 +103,16 @@ FROM repos
 
 // List implements core.RepositoryStore
 func (s *repoStore) List(ctx context.Context) ([]*core.Repository, error) {
-	rows, err := s.db.Query(ctx, stmtFind)
+	rows, err := s.db.QueryContext(ctx, stmtFind)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]*core.Repository, 0)
 	for rows.Next() {
 		var repo *core.Repository
-		err := rows.Scan(&repo.ID, &repo.User, &repo.Commit, &repo.SCM,
-			&repo.HttpURL, &repo.Name,
+		err := rows.Scan(&repo.ID,
+			&repo.Commit,
+			&repo.HttpURL,
 			&repo.Created, &repo.Updated)
 		if err != nil {
 			return nil, err
@@ -84,9 +124,9 @@ func (s *repoStore) List(ctx context.Context) ([]*core.Repository, error) {
 }
 
 // ListRange implements core.RepositoryStore
-func (s *repoStore) ListRange(ctx context.Context, param core.RepoParam) ([]*core.Repository, error) {
-	panic("unimplemented")
-}
+// func (s *repoStore) ListRange(ctx context.Context, param core.RepoParam) ([]*core.Repository, error) {
+// 	panic("unimplemented")
+// }
 
 // Update implements core.RepositoryStore
 func (s *repoStore) Update(ctx context.Context, repo *core.Repository) error {
@@ -94,5 +134,12 @@ func (s *repoStore) Update(ctx context.Context, repo *core.Repository) error {
 	if err != nil {
 		return err
 	}
-	return s.db.ExecTX(ctx, query, args)
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	tx.ExecContext(ctx, query, args...)
+	return tx.Commit()
 }
