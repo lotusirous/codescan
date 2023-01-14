@@ -1,4 +1,4 @@
-# Design
+# System Design
 
 Codescan consists of the following 2 main components
 
