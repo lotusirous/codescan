@@ -3,6 +3,7 @@ package results
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
@@ -29,12 +30,19 @@ func (s *resultStore) Count(ctx context.Context) (int64, error) {
 
 // Create return the status of adding a scan result to datastore.
 func (s *resultStore) Create(ctx context.Context, result *core.ScanResult) error {
+
+	findingByte, err := json.Marshal(result.Findings)
+	if err != nil {
+		return err
+	}
+
 	query, args, err := squirrel.Insert("scan_results").SetMap(squirrel.Eq{
-		"scan_id": result.ScanID,
-		"repo_id": result.RepoID,
-		"commit":  result.Commit,
-		"created": result.Created,
-		"updated": result.Updated,
+		"scan_id":  result.ScanID,
+		"repo_id":  result.RepoID,
+		"commit":   result.Commit,
+		"created":  result.Created,
+		"updated":  result.Updated,
+		"findings": findingByte,
 	}).PlaceholderFormat(squirrel.Question).ToSql()
 	if err != nil {
 		return fmt.Errorf("%w - sql: %s", err, query)
@@ -55,7 +63,7 @@ func (s *resultStore) Create(ctx context.Context, result *core.ScanResult) error
 
 // Find returns a scan result from datastore.
 func (s *resultStore) Find(ctx context.Context, id int64) (*core.ScanResult, error) {
-	query := `SELECT scan_result_id, scan_id, repo_id, commit, created, updated
+	query := `SELECT scan_result_id, scan_id, repo_id, commit, findings, created, updated
 	FROM scan_results
 	WHERE scan_result_id = ?
 	`

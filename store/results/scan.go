@@ -2,6 +2,7 @@ package results
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"io/fs"
 
@@ -10,14 +11,19 @@ import (
 )
 
 func scanRow(sc db.Scanner) (*core.ScanResult, error) {
-	out := new(core.ScanResult)
+
+	var id, repoID, scanID, created, updated int64
+	var commit string
+	var findingByte []byte
+
 	err := sc.Scan(
-		&out.ID,
-		&out.RepoID,
-		&out.ScanID,
-		&out.Commit,
-		&out.Created,
-		&out.Updated,
+		&id,
+		&repoID,
+		&scanID,
+		&commit,
+		&findingByte,
+		&created,
+		&updated,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = fs.ErrNotExist
@@ -25,7 +31,20 @@ func scanRow(sc db.Scanner) (*core.ScanResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+
+	var findings []core.Finding
+	if err := json.Unmarshal(findingByte, &findings); err != nil {
+		return nil, err
+	}
+	return &core.ScanResult{
+		ID:       id,
+		RepoID:   repoID,
+		ScanID:   scanID,
+		Commit:   commit,
+		Findings: findings,
+		Created:  created,
+		Updated:  updated,
+	}, nil
 }
 
 func scanRows(rows *sql.Rows) ([]*core.ScanResult, error) {

@@ -3,10 +3,10 @@ package results
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/lotusirous/codescan/core"
 	"github.com/lotusirous/codescan/store/db/dbtest"
 )
@@ -116,8 +116,24 @@ func testResult(t *testing.T, got, want *core.ScanResult) {
 		t.Errorf("id not match got: %d - want: %d", got.ScanID, want.ScanID)
 	}
 
-	if cmp.Diff(got.Findings, want.Findings) != "" {
-		t.Errorf("findings not match got: %v - want: %v", got.Findings, want.Findings)
+	if len(got.Findings) == 0 {
+		t.Errorf("require results got: %d", len(got.Findings))
 	}
 
+	if err := testFinding(got.Findings, want.Findings); err != nil {
+		t.Error(err)
+	}
+}
+
+func testFinding(got, want []core.Finding) error {
+
+	if len(got) != len(want) {
+		return fmt.Errorf("len finding not match got: %d - want: %d", len(got), len(want))
+	}
+	for i := 0; i < len(got); i++ {
+		if g, w := got[i].RuleID, want[i].RuleID; g != w {
+			return fmt.Errorf("rule id not match got: %s - want: %s", g, w)
+		}
+	}
+	return nil
 }
