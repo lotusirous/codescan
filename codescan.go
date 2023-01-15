@@ -2,10 +2,12 @@ package codescan
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/lotusirous/codescan/checker"
 	"github.com/lotusirous/codescan/config"
 	"github.com/lotusirous/codescan/core"
@@ -23,6 +25,12 @@ import (
 
 // Run starts codescan program.
 func Run() error {
+	var envfile string
+	flag.StringVar(&envfile, "env-file", ".env", "Read in a file of environment variables")
+	flag.Parse()
+
+	godotenv.Load(envfile)
+
 	conf, err := config.Environ()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %v", err)
