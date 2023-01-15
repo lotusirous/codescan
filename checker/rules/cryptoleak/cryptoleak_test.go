@@ -13,12 +13,12 @@ func TestFromFileSystem(t *testing.T) {
 			Dir: "testdata/a",
 			Diags: []*analysis.Diagnostic{
 				{
-					ByAnalyzer: "cryptoleak",
+					ByAnalyzer: Analyzer,
 					Pos:        1,
 					Path:       "testdata/a/secret_leak.py",
 				},
 				{
-					ByAnalyzer: "cryptoleak",
+					ByAnalyzer: Analyzer,
 					Pos:        2,
 					Path:       "testdata/a/secret_leak.py",
 				},

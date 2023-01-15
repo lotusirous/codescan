@@ -9,15 +9,14 @@ import (
 )
 
 // DefaultRules is the simple rules for detect potential vulnerability.
-var DefaultRules = map[string]*analysis.Analyzer{
+var allRules = map[string]*analysis.Analyzer{
 	"G402": cryptoleak.Analyzer,
 }
 
-// InitRules maps the rule name to the analyzer name.
-// It replaces the analyzer name to the rule name.
-func InitRules(as map[string]*analysis.Analyzer) []*analysis.Analyzer {
+// DefaultRules defines the defaults rule of system.
+func DefaultRules() []*analysis.Analyzer {
 	var out []*analysis.Analyzer
-	for k, v := range as {
+	for k, v := range allRules {
 		v.Name = k
 		out = append(out, v)
 	}
@@ -42,7 +41,7 @@ func Run(dir string, analyzers []*analysis.Analyzer) ([]*analysis.Diagnostic, er
 func analyze(pass analysis.Pass, analyzers []*analysis.Analyzer) []*action {
 	var actions []*action
 	for _, a := range analyzers {
-		actions = append(actions, &action{a: a, pass: pass})
+		actions = append(actions, &action{analyzer: a, pass: pass})
 	}
 	// Execute in parallel.
 	execAll(actions)
@@ -51,13 +50,13 @@ func analyze(pass analysis.Pass, analyzers []*analysis.Analyzer) []*action {
 
 func collectDiagnostics(actions []*action) ([]*analysis.Diagnostic, error) {
 	var out []*analysis.Diagnostic
-	for _, a := range actions {
-		if a.err != nil {
-			return nil, a.err
+	for _, act := range actions {
+		if act.err != nil {
+			return nil, act.err
 		}
 
-		for _, diag := range a.diagnostics {
-			diag.ByAnalyzer = a.a.Name
+		for _, diag := range act.diagnostics {
+			diag.ByAnalyzer = act.analyzer
 			out = append(out, diag)
 		}
 
@@ -69,7 +68,7 @@ func collectDiagnostics(actions []*action) ([]*analysis.Diagnostic, error) {
 type action struct {
 	once        sync.Once
 	pass        analysis.Pass
-	a           *analysis.Analyzer
+	analyzer    *analysis.Analyzer
 	diagnostics []*analysis.Diagnostic
 	err         error
 }
@@ -90,8 +89,8 @@ func execAll(actions []*action) {
 
 func (act *action) exec() {
 	act.once.Do(func() {
-		act.diagnostics, act.err = act.a.RunSingle(act.pass)
+		act.diagnostics, act.err = act.analyzer.RunSingle(act.pass)
 	})
 }
 
-func (act *action) String() string { return fmt.Sprintf("%s", act.a) }
+func (act *action) String() string { return fmt.Sprintf("%s", act.analyzer.Name) }

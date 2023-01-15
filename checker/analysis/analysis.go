@@ -6,7 +6,8 @@ type Meta struct {
 	Severity    string // HIGH, MEDIUM, LOW
 }
 
-// A Pass provides information to the Run function that applies a specific analyzer.
+// A Pass provides information to the Run function
+// that applies a specific analyzer.
 type Pass struct {
 	Base  string
 	Files []string // file path from base, ex: src/a/main.go
@@ -37,8 +38,8 @@ func (a *Analyzer) String() string { return a.Name }
 // result.
 
 type Diagnostic struct {
-	ByAnalyzer string // detected by analyzer.
-	Path       string // location to the file from base.
+	ByAnalyzer *Analyzer // detected by analyzer.
+	Path       string    // location to the file from base.
 	Pos        int
 	Message    string
 	// End      int    // optional
