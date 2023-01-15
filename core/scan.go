@@ -2,6 +2,8 @@ package core
 
 import (
 	"context"
+
+	"github.com/lotusirous/codescan/checker/analysis"
 )
 
 // Status of a scanning job.
@@ -11,6 +13,13 @@ const (
 	StatusSuccess    = "Success"
 	StatusFailure    = "Failure"
 )
+
+// Scanner represents a scanner type in the system.
+type Scanner struct {
+	Type      string // sast (static) or dast (dynamic)
+	Analyzers []*analysis.Analyzer
+	Scan      func(dir string) ([]*analysis.Diagnostic, error)
+}
 
 // Scan represents the scan for on a repository.
 type Scan struct {
@@ -32,13 +41,12 @@ func (s *Scan) IsDone() bool {
 	}
 }
 
-// IsFailed returns true if the scan has failed
-func (s *Scan) IsFailed() bool {
-	return s.Status == StatusFailure
-}
-
 // ScanStore defines operations for working with scans.
 type ScanStore interface {
+
+	// FindEnqueued supports the restored job.
+	FindEnqueued(ctx context.Context) ([]*Scan, error)
+
 	// Update stores the status in the datastore.
 	Update(ctx context.Context, s *Scan) error
 

@@ -6,7 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/lotusirous/codescan/checker"
 	"github.com/lotusirous/codescan/config"
+	"github.com/lotusirous/codescan/core"
+	"github.com/lotusirous/codescan/fetcher/github"
+	"github.com/lotusirous/codescan/sched"
 	"github.com/lotusirous/codescan/server"
 	"github.com/lotusirous/codescan/signal"
 	"github.com/lotusirous/codescan/store/db"
@@ -32,19 +36,37 @@ func Run() error {
 
 	ctx := signal.WithContext(context.Background())
 	var (
-		scanStore = scans.New(db)
-		repoStore = repos.New(db)
-		srv       = server.New(
+		scanStore  = scans.New(db)
+		repoStore  = repos.New(db)
+		gitFetcher = github.New("tmp", "codescan")
+
+		manager = sched.New(4, scanStore,
+			repoStore,
+			gitFetcher,
+			&core.Scanner{Type: "sast", Analyzers: checker.DefaultRules()},
+		)
+
+		srv = server.New(
 			conf.ServerAddress,
 			repoStore,
 			scanStore,
+			manager,
 		)
 	)
+
+	// Handle restore last scan from db.
+	if err := manager.RestoreLastScan(ctx); err != nil {
+		return err
+	}
 
 	var g errgroup.Group
 	g.Go(func() error {
 		log.Info().Str("addr", conf.ServerAddress).Msg("server started")
 		return srv.ListenAndServe(ctx)
+	})
+
+	g.Go(func() error {
+		return manager.Start(ctx)
 	})
 
 	return g.Wait()

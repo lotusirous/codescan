@@ -17,6 +17,24 @@ type scanStore struct {
 	db *sql.DB
 }
 
+func (s *scanStore) FindEnqueued(ctx context.Context) ([]*core.Scan, error) {
+	query := `
+SELECT scan_id, repo_id, status, enqueued_at, started_at, finished_at
+FROM scans WHERE status = 'Queued' ORDER BY enqueued_at`
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*core.Scan, 0)
+	for rows.Next() {
+		var scan *core.Scan
+		rows.Scan(&scan.ID, &scan.Status, &scan.EnqueuedAt, &scan.StartedAt, &scan.FinishedAt)
+		out = append(out, scan)
+	}
+
+	return out, nil
+}
+
 // Find returns a scan from datastore.
 func (s *scanStore) Find(ctx context.Context, id int64) (*core.Scan, error) {
 	out := new(core.Scan)

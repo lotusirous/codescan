@@ -20,11 +20,13 @@ func New(
 	addr string,
 	repos core.RepositoryStore,
 	scans core.ScanStore,
+	scheduler core.ScanScheduler,
 ) Server {
 	return Server{
 		Addr:  addr,
 		Repos: repos,
 		Scans: scans,
+		Sched: scheduler,
 	}
 }
 
@@ -32,6 +34,7 @@ func New(
 // The TLS will be applied in this struct also.
 type Server struct {
 	Addr  string
+	Sched core.ScanScheduler
 	Repos core.RepositoryStore
 	Scans core.ScanStore
 }
@@ -44,7 +47,7 @@ func (s Server) handler() http.Handler {
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/repos", api.HandleListRepo(s.Repos))
 		r.Post("/repos", api.HandleCreateRepo(s.Repos))
-		r.Post("/scan", api.HandleScanRepo(s.Repos, s.Scans))
+		r.Post("/scan", api.HandleScanRepo(s.Sched, s.Repos, s.Scans))
 	})
 	return r
 }

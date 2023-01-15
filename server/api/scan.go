@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/lotusirous/codescan/core"
 	"github.com/lotusirous/codescan/server/api/render"
@@ -15,13 +14,9 @@ type scanRequest struct {
 	RepoID int64 `json:"repo_id"`
 }
 
-type scanResponse struct {
-	ScanID int `json:"scan_id"`
-}
-
 // HandleScanRepo returns an http.HandlerFunc that processes an http.Request
 // to ScanRepo the from the system.
-func HandleScanRepo(repos core.RepositoryStore, scans core.ScanStore) http.HandlerFunc {
+func HandleScanRepo(manager core.ScanScheduler, repos core.RepositoryStore, scans core.ScanStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		in := new(scanRequest)
 		ctx := r.Context()
@@ -40,22 +35,11 @@ func HandleScanRepo(repos core.RepositoryStore, scans core.ScanStore) http.Handl
 			return
 		}
 
-		scan := &core.Scan{
-			Repository: repo.ID,
-			Status:     core.StatusQueued,
-			EnqueuedAt: time.Now().Unix(),
-		}
-
-		if err := scans.Create(ctx, scan); err != nil {
+		scan, err := manager.ScanRepo(ctx, repo)
+		if err != nil {
 			render.InternalError(w, err)
 			return
 		}
-
-		// TODO(khant): Put to the queue.
-		// if err := manager.Enqueue(scan); err != nil {
-		// 	render.InternalError(w, err)
-		// 	return
-		// }
 
 		render.JSON(w, scan, http.StatusOK)
 	}

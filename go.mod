@@ -11,6 +11,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/magefile/mage v1.14.0
 	github.com/rs/zerolog v1.28.0
 	golang.org/x/sync v0.1.0
 )
