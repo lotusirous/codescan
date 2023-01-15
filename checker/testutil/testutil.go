@@ -24,6 +24,24 @@ var TestData = func() string {
 	return testdata
 }
 
+func TestDiagnostic(t *testing.T, got, want []*analysis.Diagnostic) {
+	if len(got) != len(want) {
+		t.Error("")
+	}
+	for i := 0; i < len(got); i++ {
+		if got[i].Pos != want[i].Pos {
+			t.Errorf("invalid pos got: %d - want: %d", got[i].Pos, want[i].Pos)
+		}
+		if got[i].ByAnalyzer != want[i].ByAnalyzer {
+			t.Errorf("invalid pos got: %s - want: %s", got[i].ByAnalyzer, want[i].ByAnalyzer)
+		}
+
+		if got[i].Path != want[i].Path {
+			t.Errorf("invalid path got: %s - want: %s", got[i].Path, want[i].Path)
+		}
+	}
+}
+
 // WriteFiles is a helper function that creates a temporary directory
 // On success it returns the name of the directory and a cleanup function to delete it.
 func WriteFiles(filemap map[string]string) (dir string, cleanup func(), err error) {
@@ -62,23 +80,10 @@ func Run(t *testing.T, analyzers []*analysis.Analyzer, tests []Test) {
 			for _, d := range diag {
 				got = append(got, d)
 			}
+
+			TestDiagnostic(t, got, test.Diags)
 		}
 
-		if len(got) != len(test.Diags) {
-			t.Error("len is not matched")
-		}
-		for i := 0; i < len(got); i++ {
-			if got[i].Pos != test.Diags[i].Pos {
-				t.Errorf("invalid pos got: %d - want: %d", got[i].Pos, test.Diags[i].Pos)
-			}
-			if got[i].ByAnalyzer != test.Diags[i].ByAnalyzer {
-				t.Errorf("invalid pos got: %s - want: %s", got[i].ByAnalyzer, test.Diags[i].ByAnalyzer)
-			}
-
-			if got[i].Path != test.Diags[i].Path {
-				t.Errorf("invalid path got: %s - want: %s", got[i].Path, test.Diags[i].Path)
-			}
-		}
 	}
 
 }

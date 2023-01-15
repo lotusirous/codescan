@@ -7,6 +7,26 @@ import (
 	"github.com/lotusirous/codescan/checker/testutil"
 )
 
+var checks = []testutil.Test{
+	{Dir: "cryptokey", Diags: []*analysis.Diagnostic{
+		{
+			ByAnalyzer: "G402",
+			Path:       "src/cryptokey/main.js",
+			Pos:        1,
+		},
+		{
+			ByAnalyzer: "G402",
+			Path:       "src/cryptokey/main.py",
+			Pos:        1,
+		},
+		{
+			ByAnalyzer: "G402",
+			Path:       "src/cryptokey/main.py",
+			Pos:        2,
+		},
+	}},
+}
+
 func makeAnalyzers(map[string]*analysis.Analyzer) []*analysis.Analyzer {
 	ans := make([]*analysis.Analyzer, 0)
 	for k, a := range DefaultRules {
@@ -17,30 +37,19 @@ func makeAnalyzers(map[string]*analysis.Analyzer) []*analysis.Analyzer {
 }
 
 func TestAnalyzeGroup(t *testing.T) {
-
-	checks := []testutil.Test{
-		{Dir: "cryptokey", Diags: []*analysis.Diagnostic{
-			{
-				ByAnalyzer: "G402",
-				Path:       "src/cryptokey/main.js",
-				Pos:        1,
-			},
-		}},
-	}
-
 	ans := makeAnalyzers(DefaultRules)
 	testutil.Run(t, ans, checks)
 }
 
 func TestRun(t *testing.T) {
-	checks := []testutil.Test{
-		{Dir: "cryptokey", Diags: []*analysis.Diagnostic{
-			{
-				ByAnalyzer: "G402",
-				Path:       "src/cryptokey/main.js",
-				Pos:        1,
-			},
-		}},
+	for _, tt := range checks {
+		var testdata = testutil.TestData
+		got, err := Run(testdata(), makeAnalyzers(DefaultRules))
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		testutil.TestDiagnostic(t, got, tt.Diags)
 	}
-	Run("testdata")
+
 }
