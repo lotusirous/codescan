@@ -17,7 +17,7 @@ type repoStore struct {
 	db *sql.DB
 }
 
-// Find implements core.RepositoryStore
+// Find returns a repository from the datastore.
 func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error) {
 	query, args, err := squirrel.Select("repo_id, commit, http_url, created, updated").From("repos").ToSql()
 	if err != nil {
@@ -26,7 +26,6 @@ func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error
 	out := new(core.Repository)
 	err = s.db.QueryRowContext(ctx, query, args...).Scan(
 		&out.ID,
-		&out.Commit,
 		&out.HttpURL,
 		&out.Created,
 		&out.Updated,
@@ -38,7 +37,7 @@ func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error
 
 }
 
-// Count implements core.RepositoryStore
+// Count returns the number of repository in the datastore.
 func (s *repoStore) Count(ctx context.Context) (int64, error) {
 	query := `SELECT COUNT(*) FROM repos`
 	var count int64
@@ -49,10 +48,9 @@ func (s *repoStore) Count(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-// Create implements core.RepositoryStore
+// Create adds a repository to datastore.
 func (s *repoStore) Create(ctx context.Context, repo *core.Repository) error {
 	query, args, err := squirrel.Insert("repos").SetMap(squirrel.Eq{
-		"commit":   repo.Commit,
 		"http_url": repo.HttpURL,
 		"created":  repo.Created,
 		"updated":  repo.Updated,
@@ -73,7 +71,7 @@ func (s *repoStore) Create(ctx context.Context, repo *core.Repository) error {
 
 }
 
-// Delete implements core.RepositoryStore
+// Delete removes a repository from datastore.
 func (s *repoStore) Delete(ctx context.Context, repo *core.Repository) error {
 	query := `DELETE FROM repos WHERE repo_id = ?`
 
@@ -93,8 +91,6 @@ func (s *repoStore) Delete(ctx context.Context, repo *core.Repository) error {
 
 const stmtFind = `
 SELECT repo_id
-	,user
-	,commit
 	,http_url
 	,created
 	,updated
@@ -111,7 +107,6 @@ func (s *repoStore) List(ctx context.Context) ([]*core.Repository, error) {
 	for rows.Next() {
 		var repo *core.Repository
 		err := rows.Scan(&repo.ID,
-			&repo.Commit,
 			&repo.HttpURL,
 			&repo.Created, &repo.Updated)
 		if err != nil {
@@ -123,12 +118,7 @@ func (s *repoStore) List(ctx context.Context) ([]*core.Repository, error) {
 	return out, nil
 }
 
-// ListRange implements core.RepositoryStore
-// func (s *repoStore) ListRange(ctx context.Context, param core.RepoParam) ([]*core.Repository, error) {
-// 	panic("unimplemented")
-// }
-
-// Update implements core.RepositoryStore
+// Update updates the repo to datastore.
 func (s *repoStore) Update(ctx context.Context, repo *core.Repository) error {
 	query, args, err := squirrel.Update("repos").SetMap(toParam(repo)).ToSql()
 	if err != nil {
@@ -143,3 +133,8 @@ func (s *repoStore) Update(ctx context.Context, repo *core.Repository) error {
 	tx.ExecContext(ctx, query, args...)
 	return tx.Commit()
 }
+
+// ListRange implements core.RepositoryStore
+// func (s *repoStore) ListRange(ctx context.Context, param core.RepoParam) ([]*core.Repository, error) {
+// 	panic("unimplemented")
+// }

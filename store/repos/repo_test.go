@@ -25,14 +25,14 @@ func TestScanStore(t *testing.T) {
 	store := New(conn).(*repoStore)
 
 	t.Run("Create", testRepoCreate(store))
-
 }
 
 func testRepoCreate(store *repoStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		repo := &core.Repository{
 			HttpURL: "https://github.com/octocat/hello-worId",
-			Commit:  "7e068727fdb347b685b658d2981f8c85f7bf0585",
+			Created: 1673746850,
+			Updated: 1673746850,
 		}
 
 		err := store.Create(noContext, repo)
@@ -76,8 +76,8 @@ func testRepo(repo *core.Repository) func(t *testing.T) {
 		if got, want := repo.HttpURL, "https://github.com/octocat/hello-worId"; got != want {
 			t.Errorf("Want repo url %q, got %q", want, got)
 		}
-		if got, want := repo.Commit, "7e068727fdb347b685b658d2981f8c85f7bf0585"; got != want {
-			t.Errorf("Want repo commit %q, got %q", want, got)
+		if got, want := repo.Created, int64(1673746850); got != want {
+			t.Errorf("Want repo created %q, got %q", want, got)
 		}
 	}
 }
