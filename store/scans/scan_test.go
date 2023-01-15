@@ -28,8 +28,8 @@ func TestScanStore(t *testing.T) {
 func testScanCreate(store *scanStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		sc := &core.Scan{
-			Repository: 1,
-			Status:     core.StatusQueued,
+			RepoID: 1,
+			Status: core.StatusQueued,
 		}
 
 		err := store.Create(noContext, sc)
@@ -73,7 +73,7 @@ func testScan(sc *core.Scan) func(t *testing.T) {
 		if got, want := sc.Status, core.StatusQueued; got != want {
 			t.Errorf("Want scan status %q, got %q", want, got)
 		}
-		if got, want := sc.Repository, int64(1); got != want {
+		if got, want := sc.RepoID, int64(1); got != want {
 			t.Errorf("Want scan refer to repo id  %q, got %q", want, got)
 		}
 	}

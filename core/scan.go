@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"time"
 )
 
 // Status of a scanning job.
@@ -16,8 +15,8 @@ const (
 // Scan represents the scan for on a repository.
 type Scan struct {
 	ID         int64  `json:"id"`
-	Repository int64  `json:"repository"`
-	Status     string `json:"status"` // refer to status job.
+	RepoID     int64  `json:"repository"`
+	Status     string `json:"status"` // refer to status scanning job
 	EnqueuedAt int64  `json:"enqueuedAt"`
 	StartedAt  int64  `json:"startedAt"`
 	FinishedAt int64  `json:"finishedAt"`
@@ -59,19 +58,28 @@ type ScanStore interface {
 	Delete(context.Context, *Scan) error
 }
 
-type (
-	// ScanResult represents the scanned result.
-	ScanResult struct {
-		ID             string    `json:"id"`
-		Status         string    `json:"status"`
-		RepositoryName string    `json:"repositoryName"`
-		RepositoryURL  string    `json:"repositoryURL"`
-		Findings       []Finding `json:"findings"`
-		EnqueuedAt     time.Time `json:"enqueuedAt"`
-		StartedAt      time.Time `json:"startedAt"`
-		FinishedAt     time.Time `json:"finishedAt"`
-	}
-)
+// ScanResults is the result of scanning.
+type ScanResult struct {
+	ID       int64     `json:"id"`
+	ScanID   int64     `json:"scan_id"`
+	RepoID   int64     `json:"repo_id"`
+	Commit   string    `json:"commit"` // latest commit
+	Created  int64     `json:"created"`
+	Updated  int64     `json:"updated"`
+	Findings []Finding `json:"findings"`
+}
+
+// ScanResultStore defines the operator for working with scan results.
+type ScanResultStore interface {
+	// Find returns a scan result from datastore..
+	Find(ctx context.Context, id int64) (*ScanResult, error)
+
+	// Creates persists a scan result in the datastore.
+	Create(ctx context.Context, s *ScanResult) error
+
+	// List returns a list of scan result from the datastore.
+	List(context.Context) ([]*ScanResult, error)
+}
 
 type Finding struct {
 	Type     string   `json:"type"`

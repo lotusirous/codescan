@@ -4,12 +4,11 @@ import "context"
 
 // Repository represents a source code repository.
 type Repository struct {
-	ID int64 `json:"id"`
-	// User    string `json:"user"`   // submit by user
-	Commit  string `json:"commit"` // the latest commit
+	ID      int64  `json:"id"`
 	HttpURL string `json:"git_http_url"`
 	Created int64  `json:"created"`
 	Updated int64  `json:"updated"`
+	// User    string `json:"user"` // submit by user
 }
 
 // RepoParam defines repo query parameters.

@@ -7,6 +7,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type Scanner interface {
+	Scan(dest ...any) error
+}
+
 // Connect to a database and verify with a ping.
 func Connect(datasource string, maxOpenConnections int) (*sql.DB, error) {
 	db, err := sql.Open("mysql", datasource)

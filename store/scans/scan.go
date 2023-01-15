@@ -24,7 +24,7 @@ func (s *scanStore) Find(ctx context.Context, id int64) (*core.Scan, error) {
 SELECT scan_id, repo_id, status, enqueued_at, started_at, finished_at
 FROM scans WHERE scan_id = ?`
 	err := s.db.QueryRowContext(ctx, query, id).Scan(&out.ID,
-		&out.Repository,
+		&out.RepoID,
 		&out.Status,
 		&out.EnqueuedAt,
 		&out.StartedAt,
@@ -88,7 +88,7 @@ func (s *scanStore) Update(ctx context.Context, scan *core.Scan) error {
 // Create persists a scan to datastore.
 func (s *scanStore) Create(ctx context.Context, scan *core.Scan) error {
 	query, args, err := squirrel.Insert("scans").SetMap(squirrel.Eq{
-		"repo_id":     scan.Repository,
+		"repo_id":     scan.RepoID,
 		"status":      scan.Status,
 		"enqueued_at": scan.EnqueuedAt,
 		"started_at":  scan.StartedAt,
