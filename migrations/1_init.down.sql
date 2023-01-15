@@ -1,2 +1,3 @@
 DROP TABLE IF EXISTS repos;
 DROP TABLE IF EXISTS scans;
+DROP TABLE IF EXISTS scan_results;
