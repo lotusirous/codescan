@@ -17,56 +17,58 @@ type resultStore struct {
 	db *sql.DB
 }
 
+func (s *resultStore) Count(ctx context.Context) (int64, error) {
+	query := `SELECT COUNT(*) FROM scan_results`
+	var cnt int64
+	err := s.db.QueryRowContext(ctx, query).Scan(&cnt)
+	if err != nil {
+		return 0, err
+	}
+	return cnt, nil
+}
+
 // Create return the status of adding a scan result to datastore.
 func (s *resultStore) Create(ctx context.Context, result *core.ScanResult) error {
 	query, args, err := squirrel.Insert("scan_results").SetMap(squirrel.Eq{
-		"scan_id":  result.ScanID,
-		"repo_id":  result.RepoID,
-		"created":  result.Created,
-		"updated":  result.Updated,
-		"findings": result.Findings,
-	}).ToSql()
+		"scan_id": result.ScanID,
+		"repo_id": result.RepoID,
+		"commit":  result.Commit,
+		"created": result.Created,
+		"updated": result.Updated,
+	}).PlaceholderFormat(squirrel.Question).ToSql()
 	if err != nil {
-		return err
+		return fmt.Errorf("%w - sql: %s", err, query)
 	}
+
 	r, err := s.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	rows, err := r.RowsAffected()
+	id, err := r.LastInsertId()
 	if err != nil {
 		return err
 	}
-	if rows != 1 {
-		return fmt.Errorf("insert scan result not affected for %d", result.RepoID)
-	}
+	result.ID = id
 	return err
 
 }
 
 // Find returns a scan result from datastore.
 func (s *resultStore) Find(ctx context.Context, id int64) (*core.ScanResult, error) {
-	query, args, err := squirrel.
-		Select("scan_result_id,scan_id,repo_id,created,updated").
-		From("scan_results").
-		Where(squirrel.Eq{"scan_result_id": id}).
-		PlaceholderFormat(squirrel.Colon).
-		ToSql()
-
-	if err != nil {
-		return nil, err
-	}
-
-	r := s.db.QueryRowContext(ctx, query, args...)
+	query := `SELECT scan_result_id, scan_id, repo_id, commit, created, updated
+	FROM scan_results
+	WHERE scan_result_id = ?
+	`
+	r := s.db.QueryRowContext(ctx, query, id)
 	return scanRow(r)
 }
 
 // List returns a list of scan result from datastore.
 func (s *resultStore) List(ctx context.Context) ([]*core.ScanResult, error) {
 	query, args, err := squirrel.
-		Select("scan_result_id,scan_id,repo_id,created,updated").
+		Select("scan_result_id, scan_id, repo_id, created, updated").
 		From("scan_results").
-		PlaceholderFormat(squirrel.Colon).
+		PlaceholderFormat(squirrel.Question).
 		ToSql()
 	if err != nil {
 		return nil, err

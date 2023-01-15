@@ -2,6 +2,8 @@ package results
 
 import (
 	"context"
+	"errors"
+	"io/fs"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -60,18 +62,36 @@ func testStoreCreate(store *resultStore) func(t *testing.T) {
 			t.Error(err)
 		}
 		if r.ID == 0 {
-			t.Errorf("Want repo ID assigned, got %d", r.ID)
+			t.Errorf("Want result ID assigned, got %d", r.ID)
 		}
+		t.Run("Count", testStoreCount(store))
 		t.Run("Find", testStoreFind(store, r))
 
 	}
 }
 
+func testStoreCount(store *resultStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		got, err := store.Count(noContext)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if got != 1 {
+			t.Errorf("expect 1 record in db got %d", got)
+		}
+	}
+}
 func testStoreFind(store *resultStore, r *core.ScanResult) func(t *testing.T) {
 	return func(t *testing.T) {
 		got, err := store.Find(noContext, r.ID)
+		if errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("not found id: %d", r.ID)
+			return
+		}
 		if err != nil {
 			t.Error(err)
+			return
 		}
 		testResult(t, got, sample)
 	}

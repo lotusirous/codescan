@@ -19,7 +19,7 @@ type repoStore struct {
 
 // Find returns a repository from the datastore.
 func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error) {
-	query, args, err := squirrel.Select("repo_id, commit, http_url, created, updated").From("repos").ToSql()
+	query, args, err := squirrel.Select("repo_id, http_url, created, updated").From("repos").ToSql()
 	if err != nil {
 		return nil, err
 	}

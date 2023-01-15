@@ -28,6 +28,7 @@ func Reset(d *sql.DB) error {
 	}
 	tx.Exec("DELETE FROM repos")
 	tx.Exec("DELETE FROM scans")
+	tx.Exec("DELETE FROM scan_results")
 	return tx.Commit()
 }
 
