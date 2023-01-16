@@ -50,8 +50,8 @@ func HandleScanRepo(manager core.ScanScheduler, repos core.RepositoryStore, scan
 
 type findScanResponse struct {
 	ID         int64          `json:"id"`
-	RepoName   string         `json:"repo_name"`
-	RepoURL    string         `json:"repo_url"`
+	RepoName   string         `json:"repoName"`
+	RepoURL    string         `json:"repoURL"`
 	Status     string         `json:"status"` // refer to status scanning job
 	EnqueuedAt int64          `json:"enqueuedAt"`
 	StartedAt  int64          `json:"startedAt"`
@@ -72,7 +72,7 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 
 		scan, err := scans.Find(ctx, int64(id))
 		if err != nil {
-			render.NotFound(w, err)
+			render.NotFoundf(w, "not found %d", id)
 			return
 		}
 
