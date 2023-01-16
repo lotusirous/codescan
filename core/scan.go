@@ -33,7 +33,7 @@ type Scan struct {
 	EnqueuedAt int64  `json:"enqueuedAt"`
 	StartedAt  int64  `json:"startedAt"`
 	FinishedAt int64  `json:"finishedAt"`
-	Error      error  // only set when the scan is failed.
+	Error      error  `json:"-"` // only set when the scan is failed.
 }
 
 // IsDone returns true if the scan has a completed state.
