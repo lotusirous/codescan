@@ -10,7 +10,7 @@ type (
 	// Config provides the system configuration.
 	Config struct {
 		ServerAddress string `envconfig:"SERVER_ADDRESS"`
-		NumWorkers    int    `envconfig:"MANAGER_NUM_WORKERS"`
+		NumWorkers    int    `envconfig:"MANAGER_NUM_WORKERS" default:"1"`
 		Database      Database
 		Debug         bool
 	}

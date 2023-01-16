@@ -56,6 +56,7 @@ func (s *scheduler) RestoreLastScan(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		log.Info().Int64("repo_id", repo.ID).Int64("scan_id", scan.ID).Msg("restore last scan")
 		s.Queue <- msg{repo: repo, scan: scan}
 	}
 	return nil
@@ -81,7 +82,6 @@ func (s *scheduler) Start(ctx context.Context) error {
 			return s.doWork(ctx)
 		})
 	}
-	log.Info().Msgf("scan by %d workers", s.workers)
 	return g.Wait()
 }
 
@@ -91,7 +91,10 @@ func (s *scheduler) doWork(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case m := <-s.Queue:
-			err := s.work(ctx, m.scan, m.repo)
+			err := s.analyze(ctx, m.scan, m.repo)
+			if err == context.Canceled {
+				return nil
+			}
 			if err != nil {
 				log.Warn().Err(err).Msg("do work failed")
 			}
@@ -117,39 +120,48 @@ func (s *scheduler) workWithStatus(ctx context.Context, job *core.Scan, fn func(
 	return s.Scans.Update(ctx, job)
 }
 
-func (s *scheduler) work(ctx context.Context, job *core.Scan, repo *core.Repository) error {
-
-	return s.workWithStatus(ctx, job, func() error {
-		dir, cleanup, err := s.Git.Clone(repo.HttpURL)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if err := cleanup(); err != nil {
-				log.Warn().Err(err).Msg("clean up directory failed")
+func (s *scheduler) analyze(ctx context.Context, job *core.Scan, repo *core.Repository) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		return s.workWithStatus(ctx, job, func() error {
+			dir, cleanup, err := s.Git.Clone(repo.HttpURL)
+			if err != nil {
+				return err
 			}
-		}()
-		summary, err := s.Git.Summarize(dir)
-		if err != nil {
-			return err
-		}
+			defer func() {
+				if err := cleanup(); err != nil {
+					log.Warn().Err(err).Msg("clean up directory failed")
+				}
+			}()
+			summary, err := s.Git.Summarize(dir)
+			if err != nil {
+				return err
+			}
+			log.Info().Int64("scan_id", job.ID).Str("repo", repo.HttpURL).Msg("start scanning repo")
+			defer func() {
+				log.Info().Int64("scan_id", job.ID).Str("repo", repo.HttpURL).Msg("finished scanning repo")
+			}()
 
-		diags, err := s.Scanner.Scan(dir)
-		if err != nil {
-			return err
-		}
-		findings := s.toFindings(diags, dir)
-		return s.ScanResults.Create(ctx, &core.ScanResult{
-			ScanID:   job.ID,
-			RepoID:   repo.ID,
-			Commit:   summary.CommitHash,
-			Created:  time.Now().Unix(),
-			Updated:  time.Now().Unix(),
-			Findings: findings,
+			diags, err := s.Scanner.Scan(dir)
+			if err != nil {
+				return err
+			}
+			findings := s.toFindings(diags, dir)
+
+			// the store should not use the parent context
+			// because it might be cancelled by the signal.
+			return s.ScanResults.Create(context.Background(), &core.ScanResult{
+				ScanID:   job.ID,
+				RepoID:   repo.ID,
+				Commit:   summary.CommitHash,
+				Created:  time.Now().Unix(),
+				Updated:  time.Now().Unix(),
+				Findings: findings,
+			})
 		})
-
-	})
-
+	}
 }
 
 func (s *scheduler) toFindings(diags []*analysis.Diagnostic, stripDir string) []core.Finding {

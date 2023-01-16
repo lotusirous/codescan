@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/lotusirous/codescan/checker"
@@ -19,7 +20,6 @@ import (
 	"github.com/lotusirous/codescan/store/scans"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 )
 
 // Run starts codescan program.
@@ -51,7 +51,7 @@ func Run() error {
 		}
 
 		manager = sched.New(
-			4,
+			conf.NumWorkers,
 			scanStore,
 			repoStore,
 			scanResults,
@@ -73,17 +73,26 @@ func Run() error {
 		return err
 	}
 
-	var g errgroup.Group
-	g.Go(func() error {
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
 		log.Info().Str("addr", conf.ServerAddress).Msg("server started")
-		return srv.ListenAndServe(ctx)
-	})
+		if err := srv.ListenAndServe(ctx); err != nil {
+			log.Error().Err(err).Msg("server shutdown")
+		}
+		wg.Done()
+	}()
 
-	g.Go(func() error {
-		return manager.Start(ctx)
-	})
+	go func() {
+		log.Info().Int("num_workers", conf.NumWorkers).Msg("manager started")
+		if err := manager.Start(ctx); err != nil {
+			log.Error().Err(err).Msg("manager shutdown")
+		}
+		wg.Done()
+	}()
 
-	return g.Wait()
+	wg.Wait()
+	return nil
 
 }
 
