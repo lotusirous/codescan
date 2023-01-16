@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lotusirous/codescan/core"
+	"github.com/lotusirous/codescan/store/db"
 )
 
 func New(db *sql.DB) core.ScanStore {
@@ -17,6 +18,15 @@ type scanStore struct {
 	db *sql.DB
 }
 
+func scanRow(sc db.Scanner) (*core.Scan, error) {
+	out := new(core.Scan)
+	err := sc.Scan(&out.ID, &out.RepoID, &out.Status, &out.EnqueuedAt, &out.StartedAt, &out.FinishedAt)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (s *scanStore) FindEnqueued(ctx context.Context) ([]*core.Scan, error) {
 	query := `
 SELECT scan_id, repo_id, status, enqueued_at, started_at, finished_at
@@ -25,13 +35,17 @@ FROM scans WHERE status = 'Queued' ORDER BY enqueued_at`
 	if err != nil {
 		return nil, err
 	}
-	out := make([]*core.Scan, 0)
+	out := []*core.Scan{}
 	for rows.Next() {
-		var scan *core.Scan
-		rows.Scan(&scan.ID, &scan.Status, &scan.EnqueuedAt, &scan.StartedAt, &scan.FinishedAt)
-		out = append(out, scan)
+		r, err := scanRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
 	}
-
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
