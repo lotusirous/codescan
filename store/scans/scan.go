@@ -18,6 +18,8 @@ type scanStore struct {
 	db *sql.DB
 }
 
+const queryBase = `SELECT scan_id, repo_id, status, enqueued_at, started_at, finished_at `
+
 func scanRow(sc db.Scanner) (*core.Scan, error) {
 	out := new(core.Scan)
 	err := sc.Scan(&out.ID, &out.RepoID, &out.Status, &out.EnqueuedAt, &out.StartedAt, &out.FinishedAt)
@@ -28,9 +30,7 @@ func scanRow(sc db.Scanner) (*core.Scan, error) {
 }
 
 func (s *scanStore) FindEnqueued(ctx context.Context) ([]*core.Scan, error) {
-	query := `
-SELECT scan_id, repo_id, status, enqueued_at, started_at, finished_at
-FROM scans WHERE status = 'Queued' ORDER BY enqueued_at`
+	query := queryBase + ` FROM scans WHERE status = 'Queued' ORDER BY enqueued_at`
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -52,9 +52,7 @@ FROM scans WHERE status = 'Queued' ORDER BY enqueued_at`
 // Find returns a scan from datastore.
 func (s *scanStore) Find(ctx context.Context, id int64) (*core.Scan, error) {
 	out := new(core.Scan)
-	query := `
-SELECT scan_id, repo_id, status, enqueued_at, started_at, finished_at
-FROM scans WHERE scan_id = ?`
+	query := queryBase + `FROM scans WHERE scan_id = ?`
 	err := s.db.QueryRowContext(ctx, query, id).Scan(&out.ID,
 		&out.RepoID,
 		&out.Status,
@@ -146,16 +144,21 @@ func (s *scanStore) Create(ctx context.Context, scan *core.Scan) error {
 // It returns fs.ErrNotExist if the scan does not exist.
 // The caller owns the returned value.
 func (s *scanStore) List(ctx context.Context) ([]*core.Scan, error) {
-	query := `SELECT scan_id, status, enqueued_at, started_at, finished_at FROM scans`
+	query := queryBase + `FROM scans`
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	out := []*core.Scan{}
 	for rows.Next() {
-		var scan *core.Scan
-		rows.Scan(&scan.ID, &scan.Status, &scan.EnqueuedAt, &scan.StartedAt, &scan.FinishedAt)
-		out = append(out, scan)
+		r, err := scanRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 
 	return out, nil
