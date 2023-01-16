@@ -16,6 +16,8 @@ Separating the worker into a separate process may seem like a logical solution, 
 
 For example, the enqueue process may fail or the network connection may drop, which would require retrying a task for the worker. Additionally, when a worker completes or fails a task, it must send the result back to the manager, which could be done via Remote Procedure Calls (RPC) or a task queue. These extra events and processes add complexity and require additional development time and resources. For this reason, it's not considered a good choice.
 
+While this approach may present challenges in terms of the size of the in-memory queue, these limitations can be mitigated through adjustments to the configuration or by utilizing multiple instances.
+
 ## Improvements
 
 **Rate limiter**: The resources available for a user depend on the cost they pay. It is important to limit the number of tasks for the reliability of our service.
