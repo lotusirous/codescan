@@ -21,6 +21,7 @@ func DefaultRules() []*analysis.Analyzer {
 	return out
 }
 
+// Run starts the group of analyzers to analyze a directory.
 func Run(dir string, analyzers []*analysis.Analyzer) ([]*analysis.Diagnostic, error) {
 	return multirunner.Run(dir, analyzers)
 }
