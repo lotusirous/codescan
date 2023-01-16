@@ -49,18 +49,19 @@ func HandleScanRepo(manager core.ScanScheduler, repos core.RepositoryStore, scan
 }
 
 type findScanResponse struct {
-	ID         int64  `json:"id"`
-	RepoID     int64  `json:"repo_id"`
-	RepoURL    string `json:"repo_url"`
-	Status     string `json:"status"` // refer to status scanning job
-	EnqueuedAt int64  `json:"enqueuedAt"`
-	StartedAt  int64  `json:"startedAt"`
-	FinishedAt int64  `json:"finishedAt"`
+	ID         int64          `json:"id"`
+	RepoName   string         `json:"repo_name"`
+	RepoURL    string         `json:"repo_url"`
+	Status     string         `json:"status"` // refer to status scanning job
+	EnqueuedAt int64          `json:"enqueuedAt"`
+	StartedAt  int64          `json:"startedAt"`
+	FinishedAt int64          `json:"finishedAt"`
+	Findings   []core.Finding `json:"findings"`
 }
 
 // HandleFindScan returns an http.HandlerFunc that processes an http.Request
 // to FindScan the  from the system.
-func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore) http.HandlerFunc {
+func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results core.ScanResultStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -81,14 +82,26 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore) http.Handl
 			render.InternalError(w, err)
 			return
 		}
+
+		findings := []core.Finding{}
+		if scan.Status == core.StatusSuccess {
+			res, err := results.Find(ctx, scan.ID)
+			if err != nil {
+				render.InternalError(w, err)
+				return
+			}
+			findings = res.Findings
+		}
+
 		render.JSON(w, findScanResponse{
 			ID:         scan.ID,
-			RepoID:     repo.ID,
+			RepoName:   "todo",
 			RepoURL:    repo.HttpURL,
 			Status:     scan.Status,
 			EnqueuedAt: scan.EnqueuedAt,
 			StartedAt:  scan.StartedAt,
 			FinishedAt: scan.FinishedAt,
+			Findings:   findings,
 		}, http.StatusOK)
 	}
 }
