@@ -4,11 +4,17 @@ import (
 	"testing"
 
 	"github.com/lotusirous/codescan/checker/analysis"
-	"github.com/lotusirous/codescan/checker/testutil"
+	"github.com/lotusirous/codescan/checker/analysistest"
+	"github.com/lotusirous/codescan/checker/multirunner"
 )
 
+type Test struct {
+	Dir   string
+	Diags []*analysis.Diagnostic
+}
+
 func TestFromFileSystem(t *testing.T) {
-	checks := []testutil.Test{
+	checks := []Test{
 		{
 			Dir: "testdata/a",
 			Diags: []*analysis.Diagnostic{
@@ -34,6 +40,17 @@ func TestFromFileSystem(t *testing.T) {
 		},
 	}
 
-	t.Run("test-run", testutil.Run([]*analysis.Analyzer{Analyzer}, checks))
+	for _, tt := range checks {
+		t.Run(tt.Dir, func(t *testing.T) {
+			got, err := multirunner.Run(tt.Dir, []*analysis.Analyzer{Analyzer})
+			if err != nil {
+				t.Error(err)
+			}
+
+			if err := analysistest.TestDiag(got, tt.Diags); err != nil {
+				t.Error(err)
+			}
+		})
+	}
 
 }
