@@ -19,25 +19,27 @@ func New(
 	workers int,
 	scans core.ScanStore,
 	repos core.RepositoryStore,
+	results core.ScanResultStore,
 	git core.GitFetcher,
 	analyzer *core.Scanner,
 ) core.ScanScheduler {
 	return &scheduler{
-		workers:  workers,
-		Scans:    scans,
-		Git:      git,
-		Repos:    repos,
-		Queue:    make(chan msg, 1000),
-		Analyzer: analyzer,
+		workers:     workers,
+		Scans:       scans,
+		Git:         git,
+		Repos:       repos,
+		ScanResults: results,
+		Analyzer:    analyzer,
+		Queue:       make(chan msg, 1000),
 	}
 }
 
 type scheduler struct {
 	workers     int
 	Scans       core.ScanStore
+	Git         core.GitFetcher
 	Repos       core.RepositoryStore
 	ScanResults core.ScanResultStore
-	Git         core.GitFetcher
 	Analyzer    *core.Scanner
 	Queue       chan msg
 }
