@@ -2,6 +2,7 @@ package sched
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/lotusirous/codescan/checker/analysis"
@@ -112,6 +113,7 @@ func (s *scheduler) workWithStatus(ctx context.Context, job *core.Scan, fn func(
 		return s.Scans.Update(ctx, job)
 	}
 	job.Status = core.StatusSuccess
+	job.FinishedAt = time.Now().Unix()
 	return s.Scans.Update(ctx, job)
 }
 
@@ -131,13 +133,12 @@ func (s *scheduler) work(ctx context.Context, job *core.Scan, repo *core.Reposit
 		if err != nil {
 			return err
 		}
-		log.Info().Msg("done summary repo")
 
 		diags, err := s.Scanner.Scan(dir)
 		if err != nil {
 			return err
 		}
-		findings := s.toFindings(diags)
+		findings := s.toFindings(diags, dir)
 		return s.ScanResults.Create(ctx, &core.ScanResult{
 			ScanID:   job.ID,
 			RepoID:   repo.ID,
@@ -151,14 +152,14 @@ func (s *scheduler) work(ctx context.Context, job *core.Scan, repo *core.Reposit
 
 }
 
-func (s *scheduler) toFindings(diags []*analysis.Diagnostic) []core.Finding {
+func (s *scheduler) toFindings(diags []*analysis.Diagnostic, stripDir string) []core.Finding {
 	out := make([]core.Finding, 0)
 	for _, diag := range diags {
 		out = append(out, core.Finding{
 			Type:   s.Scanner.Type,
 			RuleID: diag.ByAnalyzer.Name,
 			Location: core.Location{
-				Path:      diag.Path,
+				Path:      strings.ReplaceAll(diag.Path, stripDir, ""),
 				Positions: core.Positions{Begin: core.Begin{Line: int64(diag.Pos)}},
 			},
 			Metadata: core.Metadata{
