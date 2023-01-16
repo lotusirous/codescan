@@ -48,7 +48,7 @@ func scanRow(sc db.Scanner) (*core.ScanResult, error) {
 }
 
 func scanRows(rows *sql.Rows) ([]*core.ScanResult, error) {
-	out := make([]*core.ScanResult, 0)
+	out := []*core.ScanResult{}
 	for rows.Next() {
 		r, err := scanRow(rows)
 		if err != nil {

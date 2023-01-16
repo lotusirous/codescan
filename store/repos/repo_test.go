@@ -43,8 +43,21 @@ func testRepoCreate(store *repoStore) func(t *testing.T) {
 			t.Errorf("Want repo ID assigned, got %d", repo.ID)
 		}
 		t.Run("count", testRepoCount(store))
+		t.Run("List", testRepoList(store))
 		t.Run("Find", testRepoFind(store, repo))
 
+	}
+}
+
+func testRepoList(store *repoStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		got, err := store.List(noContext)
+		if err != nil {
+			t.Error(err)
+		}
+		if len(got) != 1 {
+			t.Error("must have 1 records got: 5d", len(got))
+		}
 	}
 }
 

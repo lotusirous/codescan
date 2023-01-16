@@ -137,7 +137,7 @@ func (s *scanStore) List(ctx context.Context) ([]*core.Scan, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := make([]*core.Scan, 0)
+	out := []*core.Scan{}
 	for rows.Next() {
 		var scan *core.Scan
 		rows.Scan(&scan.ID, &scan.Status, &scan.EnqueuedAt, &scan.StartedAt, &scan.FinishedAt)
