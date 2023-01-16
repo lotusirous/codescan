@@ -31,6 +31,7 @@ func testRepoCreate(store *repoStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		repo := &core.Repository{
 			HttpURL: "https://github.com/octocat/hello-worId",
+			Name:    "hello-worId",
 			Created: 1673746850,
 			Updated: 1673746850,
 		}
@@ -96,6 +97,9 @@ func testRepoFind(store *repoStore, repo *core.Repository) func(t *testing.T) {
 
 func testRepo(repo *core.Repository) func(t *testing.T) {
 	return func(t *testing.T) {
+		if got, want := repo.Name, "hello-worId"; got != want {
+			t.Errorf("Want repo name %s got %s", want, got)
+		}
 		if got, want := repo.HttpURL, "https://github.com/octocat/hello-worId"; got != want {
 			t.Errorf("Want repo url %q, got %q", want, got)
 		}

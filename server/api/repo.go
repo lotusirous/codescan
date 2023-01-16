@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -17,18 +18,26 @@ type createRepoRequest struct {
 	RepoURL string `json:"repo_url"`
 }
 
-func validateGithubURL(rawURL string) error {
+// getRepoName validates and return a name of repository.
+// I assume the repo format is:
+// https://github.com/user/repo
+func getRepoName(rawURL string) (string, error) {
 	u, err := url.Parse(rawURL)
 	if u.Host != "github.com" {
-		return fmt.Errorf("not support %s", u.Host)
+		return "", fmt.Errorf("not support %s", u.Host)
 	}
 	if u.Scheme == "" {
-		return fmt.Errorf("require URL scheme")
+		return "", fmt.Errorf("require URL scheme")
 	}
 	if u.Path == "" {
-		return fmt.Errorf("require a repo")
+		return "", fmt.Errorf("require a repo")
 	}
-	return err
+
+	paths := strings.Split(u.Path, "/")
+	if len(paths) < 3 {
+		return "", fmt.Errorf("invalid format github.com/{user}/{repo}")
+	}
+	return paths[2], err
 }
 
 // HandleCreate returns an http.HandlerFunc that processes an http.Request
@@ -42,13 +51,15 @@ func HandleCreateRepo(repos core.RepositoryStore) http.HandlerFunc {
 			return
 		}
 
-		if err := validateGithubURL(in.RepoURL); err != nil {
+		name, err := getRepoName(in.RepoURL)
+		if err != nil {
 			render.BadRequestf(w, "invalid URL: %s", err.Error())
 			return
 		}
 
 		repo := &core.Repository{
 			HttpURL: in.RepoURL,
+			Name:    name,
 			Created: time.Now().Unix(),
 			Updated: time.Now().Unix(),
 		}
@@ -84,13 +95,14 @@ func HandleDeleteRepo(repos core.RepositoryStore) http.HandlerFunc {
 		)
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			render.BadRequestf(w, "invalid id %s", id)
+			render.BadRequest(w, err)
 			return
 		}
 
 		repo, err := repos.Find(ctx, int64(id))
 		if err != nil {
 			render.NotFoundf(w, "not found %d", id)
+			return
 		}
 		repos.Delete(ctx, repo)
 		w.WriteHeader(http.StatusNoContent)

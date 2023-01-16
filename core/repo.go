@@ -5,6 +5,7 @@ import "context"
 // Repository represents a source code repository.
 type Repository struct {
 	ID      int64  `json:"id"`
+	Name    string `json:"name"`
 	HttpURL string `json:"git_http_url"`
 	Created int64  `json:"created"`
 	Updated int64  `json:"updated"`

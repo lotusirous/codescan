@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS repos (
     repo_id integer AUTO_INCREMENT PRIMARY KEY,
     http_url varchar(255),
+    name text,
     created integer,
     updated integer
 );

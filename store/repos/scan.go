@@ -18,6 +18,7 @@ func scanRow(sc db.Scanner) (*core.Repository, error) {
 	repo := new(core.Repository)
 	err := sc.Scan(
 		&repo.ID,
+		&repo.Name,
 		&repo.HttpURL,
 		&repo.Created,
 		&repo.Updated,

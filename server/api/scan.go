@@ -66,7 +66,7 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 		ctx := r.Context()
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			render.BadRequestf(w, "invalid id: %s", id)
+			render.BadRequest(w, err)
 			return
 		}
 
@@ -95,7 +95,7 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 
 		render.JSON(w, findScanResponse{
 			ID:         scan.ID,
-			RepoName:   "todo",
+			RepoName:   repo.Name,
 			RepoURL:    repo.HttpURL,
 			Status:     scan.Status,
 			EnqueuedAt: scan.EnqueuedAt,

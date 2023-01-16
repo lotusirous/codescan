@@ -17,9 +17,11 @@ type repoStore struct {
 	db *sql.DB
 }
 
+const baseColumns = `repo_id, name, http_url, created, updated`
+
 // Find returns a repository from the datastore.
 func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error) {
-	query, args, err := squirrel.Select("repo_id, http_url, created, updated").
+	query, args, err := squirrel.Select(baseColumns).
 		From("repos").
 		Where(squirrel.Eq{"repo_id": id}).
 		ToSql()
@@ -44,6 +46,7 @@ func (s *repoStore) Count(ctx context.Context) (int64, error) {
 // Create adds a repository to datastore.
 func (s *repoStore) Create(ctx context.Context, repo *core.Repository) error {
 	query, args, err := squirrel.Insert("repos").SetMap(squirrel.Eq{
+		"name":     repo.Name,
 		"http_url": repo.HttpURL,
 		"created":  repo.Created,
 		"updated":  repo.Updated,
@@ -82,17 +85,16 @@ func (s *repoStore) Delete(ctx context.Context, repo *core.Repository) error {
 	return nil
 }
 
-const stmtFind = `
-SELECT repo_id
-	,http_url
-	,created
-	,updated
-FROM repos
-`
-
 // List implements core.RepositoryStore
 func (s *repoStore) List(ctx context.Context) ([]*core.Repository, error) {
-	rows, err := s.db.QueryContext(ctx, stmtFind)
+	query, args, err := squirrel.Select(baseColumns).
+		From("repos").
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
