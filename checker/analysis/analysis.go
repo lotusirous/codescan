@@ -20,11 +20,11 @@ type Analyzer struct {
 	Meta Meta
 
 	// If we want to resolve the dependency between analyzer the returns value should be
-	Run func(Pass) (any, error)
+	// Run func(Pass) (any, error)
 
-	// RunSingle allows a single analyzer to report after execution.
+	// Run allows a single analyzer to report after execution.
 	// it is different from the Run that supports a chain execution.
-	RunSingle func(Pass) ([]*Diagnostic, error)
+	Run func(Pass) ([]*Diagnostic, error)
 }
 
 func (a *Analyzer) String() string { return a.Name }

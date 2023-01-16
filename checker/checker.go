@@ -89,7 +89,7 @@ func execAll(actions []*action) {
 
 func (act *action) exec() {
 	act.once.Do(func() {
-		act.diagnostics, act.err = act.analyzer.RunSingle(act.pass)
+		act.diagnostics, act.err = act.analyzer.Run(act.pass)
 	})
 }
 

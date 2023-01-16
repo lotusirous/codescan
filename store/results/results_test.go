@@ -60,6 +60,7 @@ func testStoreCreate(store *resultStore) func(t *testing.T) {
 		err := store.Create(noContext, r)
 		if err != nil {
 			t.Error(err)
+			return
 		}
 		if r.ID == 0 {
 			t.Errorf("Want result ID assigned, got %d", r.ID)

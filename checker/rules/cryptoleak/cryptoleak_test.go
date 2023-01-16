@@ -8,7 +8,7 @@ import (
 )
 
 func TestFromFileSystem(t *testing.T) {
-	cases := []testutil.Test{
+	checks := []testutil.Test{
 		{
 			Dir: "testdata/a",
 			Diags: []*analysis.Diagnostic{
@@ -26,5 +26,6 @@ func TestFromFileSystem(t *testing.T) {
 		},
 	}
 
-	testutil.Run(t, []*analysis.Analyzer{Analyzer}, cases)
+	t.Run("test-run", testutil.Run([]*analysis.Analyzer{Analyzer}, checks))
+
 }

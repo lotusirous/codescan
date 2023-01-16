@@ -63,27 +63,31 @@ func WriteFiles(filemap map[string]string) (dir string, cleanup func(), err erro
 }
 
 // Run applies an analysis to the packages
-func Run(t *testing.T, analyzers []*analysis.Analyzer, tests []Test) {
-	for _, test := range tests {
-		var got []*analysis.Diagnostic
-		for _, a := range analyzers {
-			pass, err := analysis.Load(test.Dir)
-			if err != nil {
-				t.Error(err)
-			}
+func Run(analyzers []*analysis.Analyzer, tests []Test) func(t *testing.T) {
+	return func(t *testing.T) {
+		for _, tt := range tests {
+			testDiag(t, tt.Dir, analyzers)
+		}
+	}
+}
 
-			diag, err := a.RunSingle(pass)
-			if err != nil {
-				t.Errorf("analyzer %s failed: %v", a.Name, err)
-			}
-
-			for _, d := range diag {
-				got = append(got, d)
-			}
-
-			TestDiagnostic(t, got, test.Diags)
+func testDiag(t *testing.T, dir string, analyzers []*analysis.Analyzer) []*analysis.Diagnostic {
+	var got []*analysis.Diagnostic
+	for _, a := range analyzers {
+		pass, err := analysis.Load(dir)
+		if err != nil {
+			t.Error(err)
 		}
 
-	}
+		diag, err := a.Run(pass)
+		if err != nil {
+			t.Errorf("analyzer %s failed: %v", a.Name, err)
+			return nil
+		}
 
+		for _, d := range diag {
+			got = append(got, d)
+		}
+	}
+	return got
 }

@@ -24,8 +24,8 @@ func Validate(analyzers []*Analyzer) error {
 			return fmt.Errorf("analyzer %v has no level: HIGH, DANGER", a)
 		}
 
-		if a.Run == nil && a.RunSingle == nil {
-			return fmt.Errorf("analyzer %v wants a Run or RunSingle", a)
+		if a.Run == nil {
+			return fmt.Errorf("analyzer %v wants a Run", a)
 		}
 
 		return nil

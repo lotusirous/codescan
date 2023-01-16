@@ -18,7 +18,7 @@ var Analyzer = &analysis.Analyzer{
 		Description: "Leak the cryptography keys",
 		Severity:    "HIGH",
 	},
-	RunSingle: run,
+	Run: run,
 }
 
 func run(pass analysis.Pass) ([]*analysis.Diagnostic, error) {

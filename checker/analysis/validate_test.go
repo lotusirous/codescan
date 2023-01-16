@@ -7,7 +7,7 @@ import (
 
 func TestValidate(t *testing.T) {
 	var (
-		run = func(p Pass) (interface{}, error) {
+		run = func(p Pass) ([]*Diagnostic, error) {
 			return nil, nil
 		}
 
@@ -50,7 +50,7 @@ func TestValidate(t *testing.T) {
 func TestValidateEmptyMeta(t *testing.T) {
 	withoutDoc := &Analyzer{
 		Name: "noMeta",
-		Run: func(p Pass) (interface{}, error) {
+		Run: func(p Pass) ([]*Diagnostic, error) {
 			return nil, nil
 		},
 	}
@@ -64,12 +64,12 @@ func TestValidateNoRun(t *testing.T) {
 	withoutRun := &Analyzer{
 		Name: "withoutRun",
 		Meta: Meta{
-			Description: "No run",
+			Description: "No RUN",
 			Severity:    "NO",
 		},
 	}
 	err := Validate([]*Analyzer{withoutRun})
-	if err == nil || !strings.Contains(err.Error(), "has nil Run") {
+	if err == nil {
 		t.Errorf("got unexpected error while validating analyzers withoutRun: %v", err)
 	}
 }

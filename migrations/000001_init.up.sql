@@ -25,6 +25,5 @@ CREATE TABLE IF NOT EXISTS scan_results (
     -- repo detail
     commit varchar(255), -- The commit that produces the scan result.
     findings JSON,
-    FOREIGN KEY (scan_id) REFERENCES scans (scan_id) ON DELETE CASCADE,
     CONSTRAINT uc_scan_repo UNIQUE (scan_id,repo_id)
 );
