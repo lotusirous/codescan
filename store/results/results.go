@@ -85,22 +85,22 @@ func (s *resultStore) FindScan(ctx context.Context, scanID int64) (*core.ScanRes
 }
 
 // List returns a list of scan result from datastore.
-func (s *resultStore) List(ctx context.Context) ([]*core.ScanResult, error) {
-	query, args, err := squirrel.
-		Select("scan_result_id, scan_id, repo_id, created, updated").
-		From("scan_results").
-		PlaceholderFormat(squirrel.Question).
-		ToSql()
-	if err != nil {
-		return nil, err
-	}
+// func (s *resultStore) List(ctx context.Context) ([]*core.ScanResult, error) {
+// 	query, args, err := squirrel.
+// 		Select("scan_result_id, scan_id, repo_id, commit, findings, created, updated").
+// 		From("scan_results").
+// 		PlaceholderFormat(squirrel.Question).
+// 		ToSql()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	rows, err := s.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	return scanRows(rows)
-}
+// 	rows, err := s.db.QueryContext(ctx, query, args...)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return scanRows(rows)
+// }
 
 // DeleteByScan removes the scan by given id.
 func (s *resultStore) DeleteByScan(ctx context.Context, scanID int64) error {

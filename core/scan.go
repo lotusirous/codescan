@@ -102,7 +102,7 @@ type ScanResultStore interface {
 	Create(ctx context.Context, s *ScanResult) error
 
 	// List returns a list of scan result from the datastore.
-	List(context.Context) ([]*ScanResult, error)
+	// List(context.Context) ([]*ScanResult, error)
 }
 
 type Finding struct {
