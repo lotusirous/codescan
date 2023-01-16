@@ -65,3 +65,16 @@ func HandleFindScan(scans core.ScanStore) http.HandlerFunc {
 		render.JSON(w, scan, http.StatusOK)
 	}
 }
+
+// HandleListScan returns an http.HandlerFunc that processes an http.Request
+// to list all scans from the system.
+func HandleListScan(scans core.ScanStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		out, err := scans.List(r.Context())
+		if err != nil {
+			render.InternalError(w, err)
+			return
+		}
+		render.JSON(w, out, http.StatusOK)
+	}
+}

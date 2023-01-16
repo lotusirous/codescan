@@ -48,7 +48,10 @@ func (s Server) handler() http.Handler {
 		r.Get("/repos", api.HandleListRepo(s.Repos))
 		r.Post("/repos", api.HandleCreateRepo(s.Repos))
 		r.Delete("/repos/{id}", api.HandleDeleteRepo(s.Repos))
-		r.Post("/scan", api.HandleScanRepo(s.Sched, s.Repos, s.Scans))
+
+		r.Post("/scans", api.HandleListScan(s.Scans))
+		r.Post("/scans", api.HandleScanRepo(s.Sched, s.Repos, s.Scans))
+		r.Post("/scans/{id}", api.HandleFindScan(s.Scans))
 	})
 	return r
 }
