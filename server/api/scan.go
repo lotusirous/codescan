@@ -5,7 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/lotusirous/codescan/core"
 	"github.com/lotusirous/codescan/server/api/render"
 )
@@ -41,6 +43,25 @@ func HandleScanRepo(manager core.ScanScheduler, repos core.RepositoryStore, scan
 			return
 		}
 
+		render.JSON(w, scan, http.StatusOK)
+	}
+}
+
+// HandleFindScan returns an http.HandlerFunc that processes an http.Request
+// to FindScan the  from the system.
+func HandleFindScan(scans core.ScanStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			render.BadRequestf(w, "invalid id: %s", id)
+			return
+		}
+
+		scan, err := scans.Find(r.Context(), int64(id))
+		if err != nil {
+			render.NotFound(w, err)
+			return
+		}
 		render.JSON(w, scan, http.StatusOK)
 	}
 }
