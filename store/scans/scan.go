@@ -127,6 +127,9 @@ func (s *scanStore) Update(ctx context.Context, scan *core.Scan) error {
 }
 
 // Create persists a scan to datastore.
+// It requires a db transaction level to create a scan option.
+// multiple client can submit the same scan id. However, the execution is isolated
+// in the transaction.
 func (s *scanStore) Create(ctx context.Context, scan *core.Scan) error {
 	query, args, err := squirrel.Insert("scans").SetMap(squirrel.Eq{
 		"repo_id":     scan.RepoID,
@@ -138,8 +141,13 @@ func (s *scanStore) Create(ctx context.Context, scan *core.Scan) error {
 	if err != nil {
 		return err
 	}
-	r, err := s.db.ExecContext(ctx, query, args...)
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
+		return err
+	}
+	r, err := tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	id, err := r.LastInsertId()
@@ -148,7 +156,7 @@ func (s *scanStore) Create(ctx context.Context, scan *core.Scan) error {
 	}
 
 	scan.ID = id
-	return nil
+	return tx.Commit()
 }
 
 // List returns a all stored scans.
