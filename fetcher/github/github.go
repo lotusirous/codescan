@@ -7,9 +7,12 @@ import (
 	"github.com/lotusirous/codescan/core"
 )
 
-// New inits the github fetcher
-func New(dir, pattern string) core.GitFetcher {
-	return &github{dir, pattern}
+// New inits the github fetcher. It returns error if it cannot stat the directory.
+func New(dir, pattern string) (core.GitFetcher, error) {
+	if _, err := os.Stat(dir); err != nil {
+		return nil, err
+	}
+	return &github{dir, pattern}, nil
 }
 
 type github struct {
