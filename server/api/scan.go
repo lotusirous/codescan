@@ -14,7 +14,7 @@ import (
 )
 
 type scanRequest struct {
-	RepoID int64 `json:"repo_id"`
+	RepoID int64 `json:"repoID"`
 }
 
 // HandleScanRepo returns an http.HandlerFunc that processes an http.Request
