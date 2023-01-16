@@ -61,13 +61,25 @@ func (s *resultStore) Create(ctx context.Context, result *core.ScanResult) error
 
 }
 
+const queryBase = `SELECT scan_result_id, scan_id, repo_id, commit, findings, created, updated `
+
 // Find returns a scan result from datastore.
 func (s *resultStore) Find(ctx context.Context, id int64) (*core.ScanResult, error) {
-	query := `SELECT scan_result_id, scan_id, repo_id, commit, findings, created, updated
+	query := queryBase + `
 	FROM scan_results
 	WHERE scan_result_id = ?
 	`
 	r := s.db.QueryRowContext(ctx, query, id)
+	return scanRow(r)
+}
+
+// Find returns a scan result from datastore.
+func (s *resultStore) FindScan(ctx context.Context, scanID int64) (*core.ScanResult, error) {
+	query := queryBase + `
+	FROM scan_results
+	WHERE scan_id = ?
+	`
+	r := s.db.QueryRowContext(ctx, query, scanID)
 	return scanRow(r)
 }
 

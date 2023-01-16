@@ -51,16 +51,10 @@ func (s *scanStore) FindEnqueued(ctx context.Context) ([]*core.Scan, error) {
 
 // Find returns a scan from datastore.
 func (s *scanStore) Find(ctx context.Context, id int64) (*core.Scan, error) {
-	out := new(core.Scan)
 	query := queryBase + `FROM scans WHERE scan_id = ?`
-	err := s.db.QueryRowContext(ctx, query, id).Scan(&out.ID,
-		&out.RepoID,
-		&out.Status,
-		&out.EnqueuedAt,
-		&out.StartedAt,
-		&out.FinishedAt,
-	)
-	return out, err
+	row := s.db.QueryRowContext(ctx, query, id)
+
+	return scanRow(row)
 }
 
 // Count counts the scan in the datastore.

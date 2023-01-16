@@ -61,7 +61,7 @@ type findScanResponse struct {
 }
 
 // HandleFindScan returns an http.HandlerFunc that processes an http.Request
-// to FindScan the  from the system.
+// to find the scan result from the system.
 func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results core.ScanResultStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -79,7 +79,7 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 
 		repo, err := repos.Find(ctx, scan.RepoID)
 		if err != nil {
-			log.Error().Err(err).Msgf("unable to find repo with scan %d", scan.RepoID)
+			log.Error().Err(err).Msgf("unable to find repo by scan %d", scan.RepoID)
 			render.InternalError(w, err)
 			return
 		}
@@ -87,8 +87,9 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 		findings := []core.Finding{}
 		var commit string
 		if scan.Status == core.StatusSuccess {
-			res, err := results.Find(ctx, scan.ID)
+			res, err := results.FindScan(ctx, scan.ID)
 			if err != nil {
+				log.Error().Err(err).Msgf("unable to find result by scan %d", scan.ID)
 				render.InternalError(w, err)
 				return
 			}
