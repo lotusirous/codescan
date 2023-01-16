@@ -26,18 +26,8 @@ func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error
 	if err != nil {
 		return nil, err
 	}
-	out := new(core.Repository)
-	err = s.db.QueryRowContext(ctx, query, args...).Scan(
-		&out.ID,
-		&out.HttpURL,
-		&out.Created,
-		&out.Updated,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-
+	row := s.db.QueryRowContext(ctx, query, args...)
+	return scanRow(row)
 }
 
 // Count returns the number of repository in the datastore.
