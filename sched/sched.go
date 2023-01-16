@@ -25,6 +25,7 @@ func New(
 	return &scheduler{
 		Scans:    scans,
 		Git:      git,
+		Repos:    repos,
 		Queue:    make(chan msg, 1000),
 		Analyzer: analyzer,
 	}
