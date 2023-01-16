@@ -56,7 +56,8 @@ type findScanResponse struct {
 	EnqueuedAt int64          `json:"enqueuedAt"`
 	StartedAt  int64          `json:"startedAt"`
 	FinishedAt int64          `json:"finishedAt"`
-	Findings   []core.Finding `json:"findings"`
+	Findings   []core.Finding `json:"findings,omitempty"`
+	Commit     string         `json:"commit,omitempty"`
 }
 
 // HandleFindScan returns an http.HandlerFunc that processes an http.Request
@@ -84,6 +85,7 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 		}
 
 		findings := []core.Finding{}
+		var commit string
 		if scan.Status == core.StatusSuccess {
 			res, err := results.Find(ctx, scan.ID)
 			if err != nil {
@@ -91,6 +93,7 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 				return
 			}
 			findings = res.Findings
+			commit = res.Commit
 		}
 
 		render.JSON(w, findScanResponse{
@@ -102,6 +105,7 @@ func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore, results co
 			StartedAt:  scan.StartedAt,
 			FinishedAt: scan.FinishedAt,
 			Findings:   findings,
+			Commit:     commit,
 		}, http.StatusOK)
 	}
 }
