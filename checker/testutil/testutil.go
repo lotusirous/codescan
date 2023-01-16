@@ -1,13 +1,16 @@
 package testutil
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/lotusirous/codescan/checker/analysis"
+	"github.com/lotusirous/codescan/checker/multirunner"
 )
 
 type Test struct {
@@ -66,28 +69,30 @@ func WriteFiles(filemap map[string]string) (dir string, cleanup func(), err erro
 func Run(analyzers []*analysis.Analyzer, tests []Test) func(t *testing.T) {
 	return func(t *testing.T) {
 		for _, tt := range tests {
-			testDiag(t, tt.Dir, analyzers)
+			diags, err := run(tt.Dir, analyzers)
+			if err != nil {
+				t.Errorf("enable to run: %s -  err: %v", tt.Dir, err)
+			}
+
+			if err := testDiag(diags, tt.Diags); err != nil {
+				t.Error(err)
+			}
 		}
 	}
 }
 
-func testDiag(t *testing.T, dir string, analyzers []*analysis.Analyzer) []*analysis.Diagnostic {
-	var got []*analysis.Diagnostic
-	for _, a := range analyzers {
-		pass, err := analysis.Load(dir)
-		if err != nil {
-			t.Error(err)
-		}
-
-		diag, err := a.Run(pass)
-		if err != nil {
-			t.Errorf("analyzer %s failed: %v", a.Name, err)
-			return nil
-		}
-
-		for _, d := range diag {
-			got = append(got, d)
+func testDiag(got, want []*analysis.Diagnostic) error {
+	if len(got) != len(want) {
+		return fmt.Errorf("want 2 diags have same length")
+	}
+	for i := 0; i < len(got); i++ {
+		if !reflect.DeepEqual(got[i], want[i]) {
+			return fmt.Errorf("not equal at %d got %v - want %v", i, got[i], want[i])
 		}
 	}
-	return got
+	return nil
+}
+
+func run(dir string, analyzers []*analysis.Analyzer) ([]*analysis.Diagnostic, error) {
+	return multirunner.Run(dir, analyzers)
 }
