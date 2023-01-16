@@ -91,9 +91,20 @@ func (s *scanStore) Delete(ctx context.Context, scan *core.Scan) error {
 	return nil
 }
 
-// UpdateStatus implements core.ScanStore
+// UpdateStatus update scan to datastore.
 func (s *scanStore) Update(ctx context.Context, scan *core.Scan) error {
-	b := squirrel.Update("scans").SetMap(squirrel.Eq{"scan_id": 1})
+	var errMsg string
+	if scan.Error != nil {
+		errMsg = scan.Error.Error()
+	}
+	b := squirrel.Update("scans").
+		SetMap(squirrel.Eq{
+			"status":      scan.Status,
+			"enqueued_at": scan.EnqueuedAt,
+			"started_at":  scan.StartedAt,
+			"finished_at": scan.FinishedAt,
+			"scan_error":  errMsg,
+		}).Where(squirrel.Eq{"scan_id": scan.ID})
 	query, args, err := b.PlaceholderFormat(squirrel.Question).ToSql()
 	if err != nil {
 		return err
