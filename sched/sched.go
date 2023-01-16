@@ -2,6 +2,7 @@ package sched
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -56,7 +57,7 @@ func (s *scheduler) RestoreLastScan(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		log.Info().Int64("repo_id", repo.ID).Int64("scan_id", scan.ID).Msg("restore last scan")
+		log.Debug().Int64("repo_id", repo.ID).Int64("scan_id", scan.ID).Msg("restore last scan")
 		s.Queue <- msg{repo: repo, scan: scan}
 	}
 	return nil
@@ -92,7 +93,7 @@ func (s *scheduler) doWork(ctx context.Context) error {
 			return ctx.Err()
 		case m := <-s.Queue:
 			err := s.analyze(ctx, m.scan, m.repo)
-			if err == context.Canceled {
+			if errors.Is(err, context.Canceled) {
 				return nil
 			}
 			if err != nil {
@@ -103,7 +104,6 @@ func (s *scheduler) doWork(ctx context.Context) error {
 }
 
 func (s *scheduler) workWithStatus(ctx context.Context, job *core.Scan, fn func() error) error {
-
 	job.Status = core.StatusInProgress
 	job.StartedAt = time.Now().Unix()
 	if err := s.Scans.Update(ctx, job); err != nil {
