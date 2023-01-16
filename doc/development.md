@@ -3,14 +3,15 @@
 ## Database
 
 Migrations are managed using [github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate), with the CLI tool.
-If this is your first time using golang-migrate, check out the [Getting Started guide](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md).
+If this is your first time using golang-migrate, check out the
+
+Migrations are handled using the [github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate) package, which includes a command-line interface (CLI) tool. If you are new to golang-migrate, it is recommended to refer to the [Getting Started](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md) guide.
 
 To install the golang-migrate CLI, follow the instructions in the [migrate CLI README](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md).
 
 ### Local development database
 
-1. Install Mysql 5 on your machine for local development. It should use the default Postgres port of `3306`.
-You can use mysql database locally with docker container as follows:
+1. In order to set up local development, install MySQL version 5 on your machine. The default port for MySQL should be set to `3306`. An alternative option is to use a MySQL database within a Docker container. To do this, you can use the following command:
 
 ```sh
 docker run \
@@ -27,16 +28,19 @@ docker run \
 
 ### Setting up for tests
 
-If you followed the docker setup in step 1 in local development database above, then you have one.
-When running `go test ./...`, database tests will not run if you don't have mysql running
+If you have set up a MySQL database within a Docker container as outlined in step 1, you should now have a local development database available. However, when running `go test ./...`, it is important to note that the database tests will not run unless the MySQL service is currently running. Therefore, ensure that the MySQL service is running before executing the command to run the tests.
 
-2. Tests use `DATABASE_DATASOURCE` as a mysql connection string. Make sure you have set the environment variable.
+2. The tests rely on the DATABASE_DATASOURCE environment variable as the MySQL connection string. This variable should be set before running the tests.
 
 ```sh
 export DATABASE_DATASOURCE="root@tcp(localhost:3306)/test?parseTime=true"
 ```
 
-3. Migrate the database (if you have not migrated)
+Make sure to replace `root:password` with your MySQL root user and its corresponding password, also replace test with your desired database name.
+
+Please keep in mind that the above command is for Unix-based systems, for windows use `set` instead of `export`
+
+3. In order for the database to be up-to-date with the current schema, it is necessary to run the database migrations. If the database has not been migrated, use the following command to migrate it:
 
 ```sh
 migrate -source file:migrations -database "mysql://$DATABASE_DATASOURCE" up
