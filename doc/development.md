@@ -70,3 +70,14 @@ If you are migrating for the first time. You just runs the command, make sure th
 ```
 migrate -source file:migrations -database "mysql://root@tcp(localhost:3306)/test?parseTime=true" up
 ```
+
+## Environment variables
+
+This program uses the following environment variables:
+
+```
+SERVER_ADDRESS=":8080"
+MANAGER_NUM_WORKERS=1
+DATABASE_DATASOURCE="root:1@tcp(localhost:3306)/test?parseTime=true"
+DATABASE_MAX_CONNECTIONS=0
+```
