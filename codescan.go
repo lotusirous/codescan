@@ -85,9 +85,7 @@ func Run() error {
 
 	go func() {
 		log.Info().Int("num_workers", conf.NumWorkers).Msg("manager started")
-		if err := manager.Start(ctx); err != nil {
-			log.Error().Err(err).Msg("manager shutdown")
-		}
+		manager.Loop(ctx)
 		wg.Done()
 	}()
 

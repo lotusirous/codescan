@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/lotusirous/codescan/checker/analysis"
 	"github.com/lotusirous/codescan/core"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 )
 
 type msg struct {
@@ -76,17 +76,22 @@ func (s *scheduler) ScanRepo(ctx context.Context, repo *core.Repository) (*core.
 	return scan, nil
 }
 
-func (s *scheduler) Start(ctx context.Context) error {
-	var g errgroup.Group
+// Loop starts the worker in the group
+// workers should not stop even if the error is occurred.
+func (s *scheduler) Loop(ctx context.Context) {
+	var wg sync.WaitGroup
 	for i := 0; i < s.workers; i++ {
-		g.Go(func() error {
-			return s.doWork(ctx)
-		})
+		wg.Add(1)
+		func() {
+			s.workContext(ctx)
+			wg.Done()
+		}()
 	}
-	return g.Wait()
+	wg.Wait()
+	return
 }
 
-func (s *scheduler) doWork(ctx context.Context) error {
+func (s *scheduler) workContext(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():

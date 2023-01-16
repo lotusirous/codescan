@@ -10,6 +10,6 @@ type ScanScheduler interface {
 	// RestoreLastScan restores the last scan to the queue.
 	RestoreLastScan(ctx context.Context) error
 
-	// Starts runs the worker inside the manager.
-	Start(ctx context.Context) error
+	// Loop runs the worker inside the manager.
+	Loop(ctx context.Context)
 }
