@@ -45,6 +45,7 @@ func testRepoCreate(store *repoStore) func(t *testing.T) {
 		t.Run("count", testRepoCount(store))
 		t.Run("List", testRepoList(store))
 		t.Run("Find", testRepoFind(store, repo))
+		t.Run("Delete", testDelete(store, repo))
 
 	}
 }
@@ -57,6 +58,15 @@ func testRepoList(store *repoStore) func(t *testing.T) {
 		}
 		if len(got) != 1 {
 			t.Error("must have 1 records got: 5d", len(got))
+		}
+	}
+}
+
+func testDelete(store *repoStore, repo *core.Repository) func(t *testing.T) {
+	return func(t *testing.T) {
+		err := store.Delete(noContext, repo)
+		if err != nil {
+			t.Error(err)
 		}
 	}
 }
