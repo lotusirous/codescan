@@ -52,6 +52,12 @@ migrate -source file:migrations -database "mysql://$DATABASE_DATASOURCE" up
 go test ./...
 ```
 
+5. Start the server
+
+```
+go run cmd/codescan/main.go
+```
+
 ### Creating a migration
 
 To create migration:
