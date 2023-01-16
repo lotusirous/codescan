@@ -41,12 +41,13 @@ type Server struct {
 
 func (s Server) handler() http.Handler {
 	r := chi.NewRouter()
-	// r.Use(middleware.StripSlashes)
+	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Recoverer)
-	r.Get("/", s.handleHome())
+	// r.Get("/", s.handleHome())
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/repos", api.HandleListRepo(s.Repos))
 		r.Post("/repos", api.HandleCreateRepo(s.Repos))
+		r.Delete("/repos/{id}", api.HandleDeleteRepo(s.Repos))
 		r.Post("/scan", api.HandleScanRepo(s.Sched, s.Repos, s.Scans))
 	})
 	return r
@@ -84,6 +85,6 @@ func (s Server) listenAndServe(ctx context.Context) error {
 
 func (s Server) handleHome() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Home page"))
+		w.Write([]byte("Please go to /api"))
 	}
 }

@@ -37,3 +37,11 @@ func TestValidateGithubURL(t *testing.T) {
 	}
 
 }
+
+func TestHandleListRepo(t *testing.T) {
+
+}
+
+func TestHandleCreateRepo(t *testing.T) {
+
+}

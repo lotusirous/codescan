@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/lotusirous/codescan/core"
 	"github.com/lotusirous/codescan/server/api/render"
 )
@@ -48,6 +50,7 @@ func HandleCreateRepo(repos core.RepositoryStore) http.HandlerFunc {
 		repo := &core.Repository{
 			HttpURL: in.RepoURL,
 			Created: time.Now().Unix(),
+			Updated: time.Now().Unix(),
 		}
 
 		if err := repos.Create(r.Context(), repo); err != nil {
@@ -66,8 +69,31 @@ func HandleListRepo(repos core.RepositoryStore) http.HandlerFunc {
 		out, err := repos.List(r.Context())
 		if err != nil {
 			render.InternalError(w, err)
+			return
 		}
 		render.JSON(w, out, http.StatusOK)
+	}
+}
+
+// HandleDeleteRepo returns an http.HandlerFunc that processes an http.Request
+// to delete the repository from the system.
+func HandleDeleteRepo(repos core.RepositoryStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			ctx = r.Context()
+		)
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			render.BadRequestf(w, "invalid id %s", id)
+			return
+		}
+
+		repo, err := repos.Find(ctx, int64(id))
+		if err != nil {
+			render.NotFoundf(w, "not found %d", id)
+		}
+		repos.Delete(ctx, repo)
+		w.WriteHeader(http.StatusNoContent)
 
 	}
 }
