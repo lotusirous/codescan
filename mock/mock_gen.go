@@ -145,6 +145,18 @@ func (m *MockScanScheduler) EXPECT() *MockScanSchedulerMockRecorder {
 	return m.recorder
 }
 
+// Loop mocks base method.
+func (m *MockScanScheduler) Loop(arg0 context.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Loop", arg0)
+}
+
+// Loop indicates an expected call of Loop.
+func (mr *MockScanSchedulerMockRecorder) Loop(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Loop", reflect.TypeOf((*MockScanScheduler)(nil).Loop), arg0)
+}
+
 // RestoreLastScan mocks base method.
 func (m *MockScanScheduler) RestoreLastScan(arg0 context.Context) error {
 	m.ctrl.T.Helper()
@@ -172,20 +184,6 @@ func (m *MockScanScheduler) ScanRepo(arg0 context.Context, arg1 *core.Repository
 func (mr *MockScanSchedulerMockRecorder) ScanRepo(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScanRepo", reflect.TypeOf((*MockScanScheduler)(nil).ScanRepo), arg0, arg1)
-}
-
-// Start mocks base method.
-func (m *MockScanScheduler) Start(arg0 context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Start", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Start indicates an expected call of Start.
-func (mr *MockScanSchedulerMockRecorder) Start(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockScanScheduler)(nil).Start), arg0)
 }
 
 // MockScanResultStore is a mock of ScanResultStore interface.
@@ -253,6 +251,21 @@ func (m *MockScanResultStore) Find(arg0 context.Context, arg1 int64) (*core.Scan
 func (mr *MockScanResultStoreMockRecorder) Find(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockScanResultStore)(nil).Find), arg0, arg1)
+}
+
+// FindScan mocks base method.
+func (m *MockScanResultStore) FindScan(arg0 context.Context, arg1 int64) (*core.ScanResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindScan", arg0, arg1)
+	ret0, _ := ret[0].(*core.ScanResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindScan indicates an expected call of FindScan.
+func (mr *MockScanResultStoreMockRecorder) FindScan(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindScan", reflect.TypeOf((*MockScanResultStore)(nil).FindScan), arg0, arg1)
 }
 
 // List mocks base method.

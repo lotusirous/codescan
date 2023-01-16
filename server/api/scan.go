@@ -19,7 +19,7 @@ type scanRequest struct {
 
 // HandleScanRepo returns an http.HandlerFunc that processes an http.Request
 // to ScanRepo the from the system.
-func HandleScanRepo(manager core.ScanScheduler, repos core.RepositoryStore, scans core.ScanStore) http.HandlerFunc {
+func HandleScanRepo(manager core.ScanScheduler, repos core.RepositoryStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		in := new(scanRequest)
 		ctx := r.Context()
