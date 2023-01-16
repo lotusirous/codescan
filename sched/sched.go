@@ -23,6 +23,7 @@ func New(
 	analyzer *core.Scanner,
 ) core.ScanScheduler {
 	return &scheduler{
+		workers:  workers,
 		Scans:    scans,
 		Git:      git,
 		Repos:    repos,
@@ -77,6 +78,7 @@ func (s *scheduler) Start(ctx context.Context) error {
 			return s.doWork(ctx)
 		})
 	}
+	log.Info().Msgf("scan by %d workers", s.workers)
 	return g.Wait()
 }
 
@@ -94,53 +96,54 @@ func (s *scheduler) doWork(ctx context.Context) error {
 	}
 }
 
-func (s *scheduler) work(ctx context.Context, job *core.Scan, repo *core.Repository) error {
+func (s *scheduler) workWithStatus(ctx context.Context, job *core.Scan, fn func() error) error {
 	job.Status = core.StatusInProgress
 	job.StartedAt = time.Now().Unix()
 	if err := s.Scans.Update(ctx, job); err != nil {
 		return err
 	}
 
-	log.Info().Str("repo_url", repo.HttpURL).Msg("clone repo")
-	dir, cleanup, err := s.Git.Clone(repo.HttpURL)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := cleanup(); err != nil {
-			log.Warn().Err(err).Msg("clean up directory failed")
-		}
-	}()
-
-	summary, err := s.Git.Summarize(dir)
-	if err != nil {
-		return err
-	}
-
-	diags, err := s.Analyzer.Scan(dir)
-	if err != nil {
+	if err := fn(); err != nil {
 		job.Status = core.StatusFailure
-		log.Error().Err(err).Str("repo", repo.HttpURL).Msg("analysis failed")
-	} else {
-		job.Status = core.StatusSuccess
+		log.Error().Err(err).Msg("work fn failed")
+		return s.Scans.Update(ctx, job)
 	}
+	job.Status = core.StatusSuccess
+	return s.Scans.Update(ctx, job)
+}
 
-	job.FinishedAt = time.Now().Unix()
-	if err := s.Scans.Update(ctx, job); err != nil {
-		return err
-	}
+func (s *scheduler) work(ctx context.Context, job *core.Scan, repo *core.Repository) error {
 
-	findings := s.toFindings(diags)
-	s.ScanResults.Create(ctx, &core.ScanResult{
-		ScanID:   job.ID,
-		RepoID:   repo.ID,
-		Commit:   summary.CommitHash,
-		Created:  time.Now().Unix(),
-		Updated:  time.Now().Unix(),
-		Findings: findings,
+	return s.workWithStatus(ctx, job, func() error {
+		dir, cleanup, err := s.Git.Clone(repo.HttpURL)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := cleanup(); err != nil {
+				log.Warn().Err(err).Msg("clean up directory failed")
+			}
+		}()
+		summary, err := s.Git.Summarize(dir)
+		if err != nil {
+			return err
+		}
+
+		diags, err := s.Analyzer.Scan(dir)
+		if err != nil {
+			return err
+		}
+		findings := s.toFindings(diags)
+		return s.ScanResults.Create(ctx, &core.ScanResult{
+			ScanID:   job.ID,
+			RepoID:   repo.ID,
+			Commit:   summary.CommitHash,
+			Created:  time.Now().Unix(),
+			Updated:  time.Now().Unix(),
+			Findings: findings,
+		})
+
 	})
-
-	return err
 
 }
 
