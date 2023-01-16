@@ -63,7 +63,7 @@ func HandleCreateRepo(repos core.RepositoryStore) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		render.JSON(w, repo, http.StatusOK)
 	}
 }
 
@@ -98,7 +98,10 @@ func HandleDeleteRepo(repos core.RepositoryStore) http.HandlerFunc {
 			render.NotFoundf(w, "not found %d", id)
 			return
 		}
-		repos.Delete(ctx, repo)
+		if err := repos.Delete(ctx, repo); err != nil {
+			render.InternalError(w, err)
+			return
+		}
 		w.WriteHeader(http.StatusNoContent)
 
 	}
