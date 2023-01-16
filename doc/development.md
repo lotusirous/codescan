@@ -9,38 +9,51 @@ To install the golang-migrate CLI, follow the instructions in the [migrate CLI R
 
 ### Local development database
 
-1. Install Mysql 5 on your machine for local development. It should use the default Postgres port of 3306.
+1. Install Mysql 5 on your machine for local development. It should use the default Postgres port of `3306`.
 You can use mysql database locally with docker container as follows:
 
 ```sh
-docker run
-   -p 3306:3306
-   --env MYSQL_DATABASE=test
-   --env MYSQL_ALLOW_EMPTY_PASSWORD=yes
-   --name mysql
-   --detach
-   --rm
-   mysql:5
-   --character-set-server=utf8mb4
+docker run \
+   -p 3306:3306 \
+   --env MYSQL_DATABASE=test \
+   --env MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+   --name mysql \
+   --detach \
+   --rm \
+   mysql:5 \
+   --character-set-server=utf8mb4 \
    --collation-server=utf8mb4_unicode_ci
 ```
 
 ### Setting up for tests
 
 If you followed the docker setup in step 1 in local development database above, then you have one.
-
 When running `go test ./...`, database tests will not run if you don't have mysql running
 
-Tests use the following environment variables:
+2. Tests use `DATABASE_DATASOURCE` as a mysql connection string. Make sure you have set the environment variable.
 
-- `DATABASE_DATASOURCE` the mysql connection string, such as `root@tcp(localhost:3306)/test?parseTime=true`
+```sh
+export DATABASE_DATASOURCE="root@tcp(localhost:3306)/test?parseTime=true"
+```
+
+3. Migrate the database (if you have not migrated)
+
+```sh
+migrate -source file:migrations -database "mysql://$DATABASE_DATASOURCE" up
+```
+
+4. Run the test
+
+```
+go test ./...
+```
 
 ### Creating a migration
 
 To create migration:
 
 ```
-devtools/create_migration.sh <title>
+./create_migration.sh <title>
 ```
 
 This creates two empty files in `/migrations`:
