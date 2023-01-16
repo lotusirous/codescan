@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS scans (
     scan_id integer AUTO_INCREMENT KEY,
     repo_id integer,
     status varchar(255) NOT NULL CHECK (country IN ('Queued', 'In Progress', 'Success', 'Failure')),
+    scan_error text, -- when the scan is failed.
     enqueued_at integer,
     started_at integer,
     finished_at integer
