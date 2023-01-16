@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 
+	"github.com/lotusirous/codescan/checker"
 	"github.com/lotusirous/codescan/checker/analysis"
 )
 
@@ -18,7 +19,10 @@ const (
 type Scanner struct {
 	Type      string // sast (static) or dast (dynamic)
 	Analyzers []*analysis.Analyzer
-	Scan      func(dir string) ([]*analysis.Diagnostic, error)
+}
+
+func (s Scanner) Scan(dir string) ([]*analysis.Diagnostic, error) {
+	return checker.Run(dir, s.Analyzers)
 }
 
 // Scan represents the scan for on a repository.

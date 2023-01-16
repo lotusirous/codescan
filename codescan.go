@@ -2,12 +2,10 @@ package codescan
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/lotusirous/codescan/checker"
 	"github.com/lotusirous/codescan/config"
 	"github.com/lotusirous/codescan/core"
@@ -17,6 +15,7 @@ import (
 	"github.com/lotusirous/codescan/signal"
 	"github.com/lotusirous/codescan/store/db"
 	"github.com/lotusirous/codescan/store/repos"
+	"github.com/lotusirous/codescan/store/results"
 	"github.com/lotusirous/codescan/store/scans"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,12 +24,6 @@ import (
 
 // Run starts codescan program.
 func Run() error {
-	var envfile string
-	flag.StringVar(&envfile, "env-file", ".env", "Read in a file of environment variables")
-	flag.Parse()
-
-	godotenv.Load(envfile)
-
 	conf, err := config.Environ()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %v", err)
@@ -43,15 +36,27 @@ func Run() error {
 	}
 
 	ctx := signal.WithContext(context.Background())
-	var (
-		scanStore  = scans.New(db)
-		repoStore  = repos.New(db)
-		gitFetcher = github.New("tmp", "codescan")
+	gitFetcher, err := github.New("tmp", "codescan")
+	if err != nil {
+		return err
+	}
 
-		manager = sched.New(4, scanStore,
+	var (
+		scanStore     = scans.New(db)
+		repoStore     = repos.New(db)
+		scanResults   = results.New(db)
+		staticScanner = core.Scanner{
+			Type:      "sast", // static analysis.
+			Analyzers: checker.DefaultRules(),
+		}
+
+		manager = sched.New(
+			4,
+			scanStore,
 			repoStore,
+			scanResults,
 			gitFetcher,
-			&core.Scanner{Type: "sast", Analyzers: checker.DefaultRules()},
+			staticScanner,
 		)
 
 		srv = server.New(

@@ -21,7 +21,7 @@ func New(
 	repos core.RepositoryStore,
 	results core.ScanResultStore,
 	git core.GitFetcher,
-	analyzer *core.Scanner,
+	scanner core.Scanner,
 ) core.ScanScheduler {
 	return &scheduler{
 		workers:     workers,
@@ -29,7 +29,7 @@ func New(
 		Git:         git,
 		Repos:       repos,
 		ScanResults: results,
-		Analyzer:    analyzer,
+		Scanner:     scanner,
 		Queue:       make(chan msg, 1000),
 	}
 }
@@ -40,7 +40,7 @@ type scheduler struct {
 	Git         core.GitFetcher
 	Repos       core.RepositoryStore
 	ScanResults core.ScanResultStore
-	Analyzer    *core.Scanner
+	Scanner     core.Scanner
 	Queue       chan msg
 }
 
@@ -99,6 +99,7 @@ func (s *scheduler) doWork(ctx context.Context) error {
 }
 
 func (s *scheduler) workWithStatus(ctx context.Context, job *core.Scan, fn func() error) error {
+
 	job.Status = core.StatusInProgress
 	job.StartedAt = time.Now().Unix()
 	if err := s.Scans.Update(ctx, job); err != nil {
@@ -130,8 +131,9 @@ func (s *scheduler) work(ctx context.Context, job *core.Scan, repo *core.Reposit
 		if err != nil {
 			return err
 		}
+		log.Info().Msg("done summary repo")
 
-		diags, err := s.Analyzer.Scan(dir)
+		diags, err := s.Scanner.Scan(dir)
 		if err != nil {
 			return err
 		}
@@ -153,7 +155,7 @@ func (s *scheduler) toFindings(diags []*analysis.Diagnostic) []core.Finding {
 	out := make([]core.Finding, 0)
 	for _, diag := range diags {
 		out = append(out, core.Finding{
-			Type:   s.Analyzer.Type,
+			Type:   s.Scanner.Type,
 			RuleID: diag.ByAnalyzer.Name,
 			Location: core.Location{
 				Path:      diag.Path,
