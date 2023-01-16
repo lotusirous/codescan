@@ -49,8 +49,9 @@ func (s Server) handler() http.Handler {
 	r.Get("/", s.handleHome())
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/repos", api.HandleListRepo(s.Repos))
+		r.Get("/repos/{id}", api.HandleFindRepo(s.Repos))
 		r.Post("/repos", api.HandleCreateRepo(s.Repos))
-		r.Post("/repos/{id}", api.HandleUpdateRepo(s.Repos))
+		r.Put("/repos/{id}", api.HandleUpdateRepo(s.Repos))
 		r.Delete("/repos/{id}", api.HandleDeleteRepo(s.Repos))
 
 		r.Get("/scans", api.HandleListScan(s.Scans))

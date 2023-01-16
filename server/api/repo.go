@@ -37,6 +37,25 @@ func validateURL(rawURL string) error {
 	return err
 }
 
+// HandleFindRepo returns an http.HandlerFunc that processes an http.Request
+// to find a repository by id from the system.
+func HandleFindRepo(repos core.RepositoryStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			render.BadRequest(w, err)
+			return
+		}
+
+		out, err := repos.Find(r.Context(), int64(id))
+		if errors.Is(err, fs.ErrNotExist) {
+			render.NotFoundf(w, "not found repo %d", id)
+			return
+		}
+		render.JSON(w, out, http.StatusOK)
+	}
+}
+
 // HandleCreate returns an http.HandlerFunc that processes an http.Request
 // to add the repository from the system.
 func HandleCreateRepo(repos core.RepositoryStore) http.HandlerFunc {
