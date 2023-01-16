@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/lotusirous/codescan/core"
 	"github.com/lotusirous/codescan/server/api/render"
+	"github.com/rs/zerolog/log"
 )
 
 type scanRequest struct {
@@ -47,22 +48,48 @@ func HandleScanRepo(manager core.ScanScheduler, repos core.RepositoryStore, scan
 	}
 }
 
+type findScanResponse struct {
+	ID         int64  `json:"id"`
+	RepoID     int64  `json:"repo_id"`
+	RepoURL    string `json:"repo_url"`
+	Status     string `json:"status"` // refer to status scanning job
+	EnqueuedAt int64  `json:"enqueuedAt"`
+	StartedAt  int64  `json:"startedAt"`
+	FinishedAt int64  `json:"finishedAt"`
+}
+
 // HandleFindScan returns an http.HandlerFunc that processes an http.Request
 // to FindScan the  from the system.
-func HandleFindScan(scans core.ScanStore) http.HandlerFunc {
+func HandleFindScan(scans core.ScanStore, repos core.RepositoryStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			render.BadRequestf(w, "invalid id: %s", id)
 			return
 		}
 
-		scan, err := scans.Find(r.Context(), int64(id))
+		scan, err := scans.Find(ctx, int64(id))
 		if err != nil {
 			render.NotFound(w, err)
 			return
 		}
-		render.JSON(w, scan, http.StatusOK)
+
+		repo, err := repos.Find(ctx, scan.RepoID)
+		if err != nil {
+			log.Error().Err(err).Msgf("unable to find repo with scan %d", scan.RepoID)
+			render.InternalError(w, err)
+			return
+		}
+		render.JSON(w, findScanResponse{
+			ID:         scan.ID,
+			RepoID:     repo.ID,
+			RepoURL:    repo.HttpURL,
+			Status:     scan.Status,
+			EnqueuedAt: scan.EnqueuedAt,
+			StartedAt:  scan.StartedAt,
+			FinishedAt: scan.FinishedAt,
+		}, http.StatusOK)
 	}
 }
 
