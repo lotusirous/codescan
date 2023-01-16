@@ -92,6 +92,6 @@ func (s Server) listenAndServe(ctx context.Context) error {
 
 func (s Server) handleHome() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Please go to /api"))
+		_, _ = w.Write([]byte("Please go to /api"))
 	}
 }
