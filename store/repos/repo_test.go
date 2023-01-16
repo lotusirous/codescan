@@ -47,8 +47,27 @@ func testRepoCreate(store *repoStore) func(t *testing.T) {
 		t.Run("count", testRepoCount(store))
 		t.Run("List", testRepoList(store))
 		t.Run("Find", testRepoFind(store, repo))
+		t.Run("Update", testRepoFind(store, repo))
 		t.Run("Delete", testDelete(store, repo))
 
+	}
+}
+
+func testRepoUpdate(store *repoStore, repo *core.Repository) func(t *testing.T) {
+	return func(t *testing.T) {
+		repo.Name = "foobar"
+		if err := store.Update(noContext, repo); err != nil {
+			t.Error(err)
+		}
+
+		out, err := store.Find(noContext, repo.ID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if out.Name != "foobar" {
+			t.Errorf("Want updated name %s - got %s", "foobar", out.Name)
+		}
 	}
 }
 
