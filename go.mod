@@ -8,10 +8,9 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/go-sql-driver/mysql v1.7.0
-	github.com/google/go-cmp v0.5.9
+	github.com/golang/mock v1.6.0
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/magefile/mage v1.14.0
 	github.com/rs/zerolog v1.28.0
 	golang.org/x/sync v0.1.0
 )
