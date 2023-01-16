@@ -20,7 +20,8 @@ func TestScanStore(t *testing.T) {
 		if err := dbtest.Reset(conn); err != nil {
 			t.Error(err)
 		}
-		dbtest.Disconnect(conn)
+		_ = dbtest.Reset(conn)
+		_ = dbtest.Disconnect(conn)
 	}()
 	store := New(conn).(*repoStore)
 

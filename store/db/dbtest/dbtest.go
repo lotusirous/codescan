@@ -1,7 +1,6 @@
 package dbtest
 
 import (
-	"context"
 	"database/sql"
 	_ "embed"
 	"os"
@@ -12,13 +11,10 @@ import (
 
 // Connect opens a new test database connection.
 func Connect() (*sql.DB, error) {
-	var datasource string
-	datasource = os.Getenv("DATABASE_DATASOURCE")
+	datasource := os.Getenv("DATABASE_DATASOURCE")
 	return db.Connect(datasource, 0)
 
 }
-
-var noContext = context.TODO()
 
 // Reset resets the database state.
 func Reset(d *sql.DB) error {
@@ -26,9 +22,9 @@ func Reset(d *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	tx.Exec("DELETE FROM repos")
-	tx.Exec("DELETE FROM scans")
-	tx.Exec("DELETE FROM scan_results")
+	_, _ = tx.Exec("DELETE FROM repos")
+	_, _ = tx.Exec("DELETE FROM scans")
+	_, _ = tx.Exec("DELETE FROM scan_results")
 	return tx.Commit()
 }
 

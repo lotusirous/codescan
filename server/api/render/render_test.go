@@ -19,7 +19,9 @@ func TestWriteError(t *testing.T) {
 	}
 
 	errjson := &errors.Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error("Unable to decode errjson")
+	}
 	if got, want := errjson.Message, err.Error(); got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -36,7 +38,9 @@ func TestWriteNotFound(t *testing.T) {
 	}
 
 	errjson := &errors.Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error("Unable to decode errjson")
+	}
 	if got, want := errjson.Message, err.Error(); got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -51,7 +55,9 @@ func TestWriteNotFoundf(t *testing.T) {
 	}
 
 	errjson := &errors.Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error("Unable to decode errjson")
+	}
 	if got, want := errjson.Message, "pc load letter"; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
@@ -68,7 +74,9 @@ func TestWriteInternalError(t *testing.T) {
 	}
 
 	errjson := &errors.Error{}
-	json.NewDecoder(w.Body).Decode(errjson)
+	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
+		t.Error("Unable to decode errjson")
+	}
 	if got, want := errjson.Message, err.Error(); got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}

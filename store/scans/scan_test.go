@@ -17,8 +17,8 @@ func TestScanStore(t *testing.T) {
 		return
 	}
 	defer func() {
-		dbtest.Reset(conn)
-		dbtest.Disconnect(conn)
+		_ = dbtest.Reset(conn)
+		_ = dbtest.Disconnect(conn)
 	}()
 	store := New(conn).(*scanStore)
 

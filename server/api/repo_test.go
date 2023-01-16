@@ -81,7 +81,9 @@ func TestHandleCreateRepo(t *testing.T) {
 	})
 
 	in := new(bytes.Buffer)
-	json.NewEncoder(in).Encode(mockRepo)
+	if err := json.NewEncoder(in).Encode(mockRepo); err != nil {
+		t.Error(err)
+	}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("POST", "/", in)
 
@@ -91,7 +93,9 @@ func TestHandleCreateRepo(t *testing.T) {
 	}
 
 	out := new(core.Repository)
-	json.NewDecoder(w.Body).Decode(out)
+	if err := json.NewDecoder(w.Body).Decode(out); err != nil {
+		t.Error(err)
+	}
 	if got, want := out.Name, "hello-world"; got != want {
 		t.Errorf("Want repo name %s, got %s", want, got)
 	}

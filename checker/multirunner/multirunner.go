@@ -1,7 +1,6 @@
 package multirunner
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/lotusirous/codescan/checker/analysis"
@@ -77,4 +76,4 @@ func (act *action) exec() {
 	})
 }
 
-func (act *action) String() string { return fmt.Sprintf("%s", act.analyzer.Name) }
+func (act *action) String() string { return act.analyzer.Name }

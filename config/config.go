@@ -1,8 +1,6 @@
 package config
 
 import (
-	"strings"
-
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -28,14 +26,6 @@ func Environ() (Config, error) {
 	defaultAddress(&cfg)
 	err := envconfig.Process("", &cfg)
 	return cfg, err
-}
-
-func cleanHostname(hostname string) string {
-	hostname = strings.ToLower(hostname)
-	hostname = strings.TrimPrefix(hostname, "http://")
-	hostname = strings.TrimPrefix(hostname, "https://")
-
-	return hostname
 }
 
 func defaultAddress(c *Config) {

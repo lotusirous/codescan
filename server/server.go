@@ -46,7 +46,7 @@ func (s Server) handler() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Recoverer)
-	// r.Get("/", s.handleHome())
+	r.Get("/", s.handleHome())
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/repos", api.HandleListRepo(s.Repos))
 		r.Post("/repos", api.HandleCreateRepo(s.Repos))

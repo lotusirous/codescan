@@ -29,10 +29,7 @@ func run(pass analysis.Pass) ([]*analysis.Diagnostic, error) {
 		if err != nil {
 			return nil, err
 		}
-		for _, d := range diag {
-			out = append(out, d)
-		}
-
+		out = append(out, diag...)
 	}
 	return out, nil
 }

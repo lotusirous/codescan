@@ -21,6 +21,7 @@ type Scanner struct {
 	Analyzers []*analysis.Analyzer
 }
 
+// Scan runs the analysis engine.
 func (s Scanner) Scan(dir string) ([]*analysis.Diagnostic, error) {
 	return checker.Run(dir, s.Analyzers)
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lotusirous/codescan/core"
+	"github.com/lotusirous/codescan/store/db"
 )
 
 func New(db *sql.DB) core.RepositoryStore {
@@ -124,7 +125,17 @@ func (s *repoStore) Update(ctx context.Context, repo *core.Repository) error {
 		return err
 	}
 
-	tx.ExecContext(ctx, query, args...)
+	r, err := tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	rows, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return db.ErrOptimisticLock
+	}
 	return tx.Commit()
 }
 

@@ -49,6 +49,6 @@ func JSON(w http.ResponseWriter, v any, status int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ") // use env variabl
-	enc.Encode(v)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(v)
 }

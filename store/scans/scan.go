@@ -147,7 +147,7 @@ func (s *scanStore) Create(ctx context.Context, scan *core.Scan) error {
 	}
 	r, err := tx.ExecContext(ctx, query, args...)
 	if err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	id, err := r.LastInsertId()

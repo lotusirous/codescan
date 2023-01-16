@@ -1,13 +1,10 @@
 package github
 
 import (
-	"context"
 	"testing"
 
 	"github.com/lotusirous/codescan/core"
 )
-
-var noContext = context.TODO()
 
 func TestGitFetcher(t *testing.T) {
 

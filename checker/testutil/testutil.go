@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -48,7 +47,7 @@ func TestDiagnostic(t *testing.T, got, want []*analysis.Diagnostic) {
 // WriteFiles is a helper function that creates a temporary directory
 // On success it returns the name of the directory and a cleanup function to delete it.
 func WriteFiles(filemap map[string]string) (dir string, cleanup func(), err error) {
-	tmp, err := ioutil.TempDir("", "analysistest")
+	tmp, err := os.MkdirTemp("", "analysistest")
 	if err != nil {
 		return "", nil, err
 	}
@@ -56,8 +55,8 @@ func WriteFiles(filemap map[string]string) (dir string, cleanup func(), err erro
 
 	for name, content := range filemap {
 		filename := filepath.Join(tmp, name)
-		os.MkdirAll(filepath.Dir(filename), 0777) // ignore error
-		if err := ioutil.WriteFile(filename, []byte(content), 0666); err != nil {
+		_ = os.MkdirAll(filepath.Dir(filename), 0777) // ignore error
+		if err := os.WriteFile(filename, []byte(content), 0666); err != nil {
 			cleanup()
 			return "", nil, err
 		}

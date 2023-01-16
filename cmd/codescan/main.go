@@ -13,7 +13,7 @@ func main() {
 	flag.StringVar(&envfile, "env-file", ".env", "Read in a file of environment variables")
 	flag.Parse()
 
-	godotenv.Load(envfile)
+	_ = godotenv.Load(envfile)
 
 	if err := codescan.Run(); err != nil {
 		log.Fatal().Err(err).Msg("main: failed to run the program")
