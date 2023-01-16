@@ -64,6 +64,7 @@ func Run() error {
 			repoStore,
 			scanStore,
 			manager,
+			scanResults,
 		)
 	)
 
