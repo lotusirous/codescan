@@ -15,29 +15,24 @@ import (
 )
 
 type createRepoRequest struct {
-	RepoURL string `json:"repo_url"`
+	Name string `json:"name"`
+	Link string `json:"link"`
 }
 
-// getRepoName validates and return a name of repository.
-// I assume the repo format is:
-// https://github.com/user/repo
-func getRepoName(rawURL string) (string, error) {
+func validateURL(rawURL string) error {
 	u, err := url.Parse(rawURL)
-	if u.Host != "github.com" {
-		return "", fmt.Errorf("not support %s", u.Host)
-	}
 	if u.Scheme == "" {
-		return "", fmt.Errorf("require URL scheme")
+		return fmt.Errorf("no url scheme")
 	}
 	if u.Path == "" {
-		return "", fmt.Errorf("require a repo")
+		return fmt.Errorf("no path to repository")
 	}
 
 	paths := strings.Split(u.Path, "/")
 	if len(paths) < 3 {
-		return "", fmt.Errorf("invalid format github.com/{user}/{repo}")
+		return fmt.Errorf("wrong format, ex github.com/{user}/{repo}")
 	}
-	return paths[2], err
+	return err
 }
 
 // HandleCreate returns an http.HandlerFunc that processes an http.Request
@@ -51,15 +46,14 @@ func HandleCreateRepo(repos core.RepositoryStore) http.HandlerFunc {
 			return
 		}
 
-		name, err := getRepoName(in.RepoURL)
-		if err != nil {
-			render.BadRequestf(w, "invalid URL: %s", err.Error())
+		if err := validateURL(in.Link); err != nil {
+			render.BadRequestf(w, "bad URL: %s", err.Error())
 			return
 		}
 
 		repo := &core.Repository{
-			HttpURL: in.RepoURL,
-			Name:    name,
+			HttpURL: in.Link,
+			Name:    in.Name,
 			Created: time.Now().Unix(),
 			Updated: time.Now().Unix(),
 		}
