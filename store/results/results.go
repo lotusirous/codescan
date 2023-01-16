@@ -8,6 +8,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lotusirous/codescan/core"
+	"github.com/lotusirous/codescan/store/db"
 )
 
 func New(conn *sql.DB) core.ScanResultStore {
@@ -99,4 +100,22 @@ func (s *resultStore) List(ctx context.Context) ([]*core.ScanResult, error) {
 		return nil, err
 	}
 	return scanRows(rows)
+}
+
+// DeleteByScan removes the scan by given id.
+func (s *resultStore) DeleteByScan(ctx context.Context, scanID int64) error {
+	query := `DELETE FROM scan_results WHERE scan_id = ?`
+
+	r, err := s.db.ExecContext(ctx, query, scanID)
+	if err != nil {
+		return err
+	}
+	rows, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return db.ErrOptimisticLock
+	}
+	return nil
 }

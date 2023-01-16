@@ -92,8 +92,7 @@ Return a `NO CONTENT` http status code if success
 
 ## Scan a repository
 
-`POST http://localhost:8080/api/scans
-`
+`POST http://localhost:8080/api/scans`
 
 ```
 {

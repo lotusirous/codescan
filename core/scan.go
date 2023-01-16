@@ -86,6 +86,9 @@ type ScanResult struct {
 // ScanResultStore defines the operator for working with scan results.
 type ScanResultStore interface {
 
+	// DeleteByScan delete the results of the scan by id.
+	DeleteByScan(ctx context.Context, id int64) error
+
 	// Count returns the number of scan results from datastore.
 	Count(ctx context.Context) (int64, error)
 

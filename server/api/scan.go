@@ -126,7 +126,7 @@ func HandleListScan(scans core.ScanStore) http.HandlerFunc {
 
 // HandleDeleteScan returns an http.HandlerFunc that processes an http.Request
 // to delete the scan from the system.
-func HandleDeleteScan(scans core.ScanStore) http.HandlerFunc {
+func HandleDeleteScan(scans core.ScanStore, results core.ScanResultStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -141,6 +141,11 @@ func HandleDeleteScan(scans core.ScanStore) http.HandlerFunc {
 		}
 
 		if err := scans.Delete(ctx, sc); err != nil {
+			render.InternalError(w, err)
+			return
+		}
+
+		if err := results.DeleteByScan(ctx, sc.ID); err != nil {
 			render.InternalError(w, err)
 			return
 		}
