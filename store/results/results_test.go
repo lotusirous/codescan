@@ -65,6 +65,48 @@ func testStoreCreate(store *resultStore) func(t *testing.T) {
 		}
 		t.Run("Count", testStoreCount(store))
 		t.Run("Find", testStoreFind(store, r))
+		// t.Run("List", testStoreList(store))
+		t.Run("FindScan", testStoreFindScan(store, r.ScanID))
+		t.Run("DeleteByScan", testStoreDeleteByScan(store, r.ScanID))
+	}
+}
+
+// func testStoreList(store *resultStore) func(*testing.T) {
+// 	return func(t *testing.T) {
+// 		out, err := store.List(noContext)
+// 		if err != nil {
+// 			t.Error(err)
+// 		}
+// 		if got := len(out); got != 1 {
+// 			t.Errorf("Want 1 records got %d", got)
+// 		}
+// 	}
+// }
+
+func testStoreFindScan(store *resultStore, scanID int64) func(*testing.T) {
+	return func(t *testing.T) {
+		out, err := store.FindScan(noContext, scanID)
+		if err != nil {
+			t.Error(err)
+		}
+		testResultFields(t, out, sample)
+	}
+}
+
+func testStoreDeleteByScan(store *resultStore, scanID int64) func(*testing.T) {
+	return func(t *testing.T) {
+		if err := store.DeleteByScan(noContext, scanID); err != nil {
+			t.Error(err)
+		}
+
+		got, err := store.Count(noContext)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if got != 0 {
+			t.Errorf("Want no records in db got %d", got)
+		}
 
 	}
 }
@@ -92,11 +134,11 @@ func testStoreFind(store *resultStore, r *core.ScanResult) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		testResult(t, got, sample)
+		testResultFields(t, got, sample)
 	}
 }
 
-func testResult(t *testing.T, got, want *core.ScanResult) {
+func testResultFields(t *testing.T, got, want *core.ScanResult) {
 	if got.Commit != want.Commit {
 		t.Errorf("commit not match got: %s - want: %s", got.Commit, want.Commit)
 	}
