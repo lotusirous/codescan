@@ -2,7 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -104,5 +106,47 @@ func HandleDeleteRepo(repos core.RepositoryStore) http.HandlerFunc {
 		}
 		w.WriteHeader(http.StatusNoContent)
 
+	}
+}
+
+type updateRepoRequest struct {
+	Name string `json:"name"`
+}
+
+// HandleUpdateRepo returns an http.HandlerFunc that processes an http.Request
+// to update a repository from the system.
+func HandleUpdateRepo(repos core.RepositoryStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			render.BadRequest(w, err)
+			return
+		}
+
+		in := new(updateRepoRequest)
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			render.BadRequest(w, err)
+			return
+		}
+
+		repo, err := repos.Find(ctx, int64(id))
+		if errors.Is(err, fs.ErrNotExist) {
+			render.NotFoundf(w, "not found repo: %d", id)
+			return
+		}
+		if err != nil {
+			render.InternalError(w, err)
+			return
+		}
+		repo.Name = in.Name
+		repo.Updated = time.Now().Unix()
+
+		if err := repos.Update(ctx, repo); err != nil {
+			render.InternalError(w, err)
+			return
+		}
+
+		render.JSON(w, repo, http.StatusOK)
 	}
 }
