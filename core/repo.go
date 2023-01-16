@@ -6,7 +6,7 @@ import "context"
 type Repository struct {
 	ID      int64  `json:"id"`
 	Name    string `json:"name"`
-	HttpURL string `json:"git_http_url"`
+	HttpURL string `json:"link"`
 	Created int64  `json:"created"`
 	Updated int64  `json:"updated"`
 	// User    string `json:"user"` // submit by user
