@@ -15,12 +15,20 @@ func TestFromFileSystem(t *testing.T) {
 				{
 					ByAnalyzer: Analyzer,
 					Pos:        1,
-					Path:       "testdata/a/secret_leak.py",
+					Path:       "testdata/a/README.md",
+					Message:    "Secret key might be leaked",
 				},
 				{
 					ByAnalyzer: Analyzer,
-					Pos:        2,
+					Pos:        1,
+					Path:       "testdata/a/secret.js",
+					Message:    "Secret key might be leaked",
+				},
+				{
+					ByAnalyzer: Analyzer,
+					Pos:        1,
 					Path:       "testdata/a/secret_leak.py",
+					Message:    "Secret key might be leaked",
 				},
 			},
 		},
