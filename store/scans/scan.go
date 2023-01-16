@@ -76,7 +76,7 @@ func (s *scanStore) Count(ctx context.Context) (int64, error) {
 
 // Delete removes the scan from datastore.
 func (s *scanStore) Delete(ctx context.Context, scan *core.Scan) error {
-	queryDelete := `DELETE FROM repos WHERE repo_id = ?`
+	queryDelete := `DELETE FROM scans WHERE scan_id = ?`
 	r, err := s.db.ExecContext(ctx, queryDelete, scan.ID)
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func (s *scanStore) Delete(ctx context.Context, scan *core.Scan) error {
 		return err
 	}
 	if rows != 1 {
-		return fmt.Errorf("no row affected for repo_id: %d", scan.ID)
+		return fmt.Errorf("no row affected for scan_id: %d", scan.ID)
 	}
 	return nil
 }
