@@ -3,7 +3,9 @@ package scans
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/fs"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lotusirous/codescan/core"
@@ -23,6 +25,9 @@ const queryBase = `SELECT scan_id, repo_id, status, enqueued_at, started_at, fin
 func scanRow(sc db.Scanner) (*core.Scan, error) {
 	out := new(core.Scan)
 	err := sc.Scan(&out.ID, &out.RepoID, &out.Status, &out.EnqueuedAt, &out.StartedAt, &out.FinishedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = fs.ErrNotExist
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +55,7 @@ func (s *scanStore) FindEnqueued(ctx context.Context) ([]*core.Scan, error) {
 }
 
 // Find returns a scan from datastore.
+// The caller should handle fs.ErrNotExist when there is no rows.
 func (s *scanStore) Find(ctx context.Context, id int64) (*core.Scan, error) {
 	query := queryBase + `FROM scans WHERE scan_id = ?`
 	row := s.db.QueryRowContext(ctx, query, id)

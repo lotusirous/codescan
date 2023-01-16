@@ -21,6 +21,7 @@ type repoStore struct {
 const baseColumns = `repo_id, name, http_url, created, updated`
 
 // Find returns a repository from the datastore.
+// The caller should handle fs.ErrNotExist when there is no rows.
 func (s *repoStore) Find(ctx context.Context, id int64) (*core.Repository, error) {
 	query, args, err := squirrel.Select(baseColumns).
 		From("repos").

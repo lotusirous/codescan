@@ -1,6 +1,10 @@
 package repos
 
 import (
+	"database/sql"
+	"errors"
+	"io/fs"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/lotusirous/codescan/core"
 	"github.com/lotusirous/codescan/store/db"
@@ -23,6 +27,9 @@ func scanRow(sc db.Scanner) (*core.Repository, error) {
 		&repo.Created,
 		&repo.Updated,
 	)
+	if errors.Is(err, sql.ErrNoRows) {
+		err = fs.ErrNotExist
+	}
 	if err != nil {
 		return nil, err
 	}
