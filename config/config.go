@@ -7,10 +7,12 @@ import (
 type (
 	// Config provides the system configuration.
 	Config struct {
-		ServerAddress string `envconfig:"SERVER_ADDRESS"`
-		NumWorkers    int    `envconfig:"MANAGER_NUM_WORKERS" default:"1"`
-		Database      Database
-		Debug         bool
+		ServerAddress  string `envconfig:"SERVER_ADDRESS"`
+		NumWorkers     int    `envconfig:"MANAGER_NUM_WORKERS" default:"1"`
+		FetchDir       string `envconfig:"FETCH_DIR" default:"tmp"`
+		FetchDirPrefix string `envconfig:"FETCH_DIR_PREFIX" default:"codescan"`
+		Database       Database
+		Debug          bool
 	}
 
 	// Database provides the database configuration.

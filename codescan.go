@@ -36,7 +36,7 @@ func Run() error {
 	}
 
 	ctx := signal.WithContext(context.Background())
-	gitFetcher, err := github.New("tmp", "codescan")
+	gitFetcher, err := github.New(conf.FetchDir, conf.FetchDirPrefix)
 	if err != nil {
 		return err
 	}
