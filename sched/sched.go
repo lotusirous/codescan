@@ -83,12 +83,13 @@ func (s *scheduler) Loop(ctx context.Context) {
 	for i := 0; i < s.workers; i++ {
 		wg.Add(1)
 		func() {
-			s.workContext(ctx)
+			if err := s.workContext(ctx); err != nil {
+				log.Warn().Err(err).Msg("workContext failed")
+			}
 			wg.Done()
 		}()
 	}
 	wg.Wait()
-	return
 }
 
 func (s *scheduler) workContext(ctx context.Context) error {
