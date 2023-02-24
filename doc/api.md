@@ -1,6 +1,9 @@
 # API document
 
-> We can utilize Swagger, but this document is more straightforward to write and maintain compared to the large JSON file required by the Swagger documentation. It should also be consistent with the `server/server.go` file for each API.
+> We can utilize Swagger, but this document is more straightforward to write and
+> maintain compared to the large JSON file required by the Swagger
+> documentation. It should also be consistent with the `server/server.go` file
+> for each API.
 
 **NOTE**
 
@@ -8,7 +11,7 @@ The server handles error codes (400, 404, 500) with the following format
 
 ```json
 {
-    "message" : "server error message goes here"
+  "message": "server error message goes here"
 }
 ```
 
@@ -53,7 +56,7 @@ Example request body:
 
 ```json
 {
-    "name": "vuln-example"
+  "name": "vuln-example"
 }
 ```
 

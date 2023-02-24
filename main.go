@@ -1,0 +1,4 @@
+package codescan
+
+func main() {
+}
